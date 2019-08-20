@@ -104,5 +104,7 @@ func main() {
 		default:
 			fmt.Printf("Default")
 		}
+
+		delivery.Ack(false)
 	}
 }
