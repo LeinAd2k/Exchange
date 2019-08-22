@@ -8,15 +8,15 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func TestOrderBookFormMapper(t *testing.T) {
-	obf := &OrderBookForm{
+func TestOrderFormMapper(t *testing.T) {
+	obf := &OrderForm{
 		Symbol:    "BTC_USD",
 		OrderType: "limit",
 		Side:      "Buy",
 		Volume:    decimal.NewFromFloat(10.00),
 		Price:     decimal.NewFromFloat(100.00),
 	}
-	ob := &models.OrderBook{}
+	ob := &models.Order{}
 	mapper.AutoMapper(obf, ob)
 	t.Log(obf)
 	t.Log(ob)

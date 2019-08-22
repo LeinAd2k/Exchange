@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 class CreateOrders < ActiveRecord::Migration[6.0]
   def change
     create_table :orders, comment: '订单' do |t|
-      t.bigint :bid_user_id, null: false, comment: '买方'
-      t.bigint :ask_user_id, null: false, comment: '卖方'
+      t.bigint :user_id, null: false, comment: '买方/卖方'
       t.string :symbol, null: false, comment: '简称 eg BTC_USD'
       t.bigint :fund_id, null: false, comment: '商品'
-      t.bigint :bid_order_book_id, null: false, comment: '买方委托单'
-      t.bigint :ask_order_book_id, null: false, comment: '卖方委托单'
+      t.integer :state, null: false, default: 0, comment: '状态'
+      t.string :order_type, null: false, comment: '订单类型 市价单market 限价单limit'
+      t.string :side, null: false, comment: 'sell or buy'
       t.decimal :volume, default: 0, precision: 32, scale: 16, comment: '量'
       t.decimal :price, default: 0, precision: 32, scale: 16, comment: '价格'
       t.decimal :ask_fee, default: 0, precision: 32, scale: 16, comment: '卖单手续费'
@@ -16,10 +18,7 @@ class CreateOrders < ActiveRecord::Migration[6.0]
       t.timestamps
     end
 
-    add_index :orders, :bid_user_id
-    add_index :orders, :ask_user_id
-    add_index :orders, :bid_order_book_id
-    add_index :orders, :ask_order_book_id
+    add_index :orders, :user_id
     add_index :orders, :fund_id
   end
 end

@@ -56,9 +56,9 @@ func main() {
 		}
 
 		switch event.Name {
-		case "create_order_book":
-			var orderBook models.OrderBook
-			err = json.Unmarshal(event.Data, &orderBook)
+		case "create_order":
+			var order models.Order
+			err = json.Unmarshal(event.Data, &order)
 			if err != nil {
 				panic(err)
 			}
@@ -72,34 +72,35 @@ func main() {
 			}
 			db.Redis().Set("matching_order_book", string(obJSON), 0)
 			log.Println("=====================")
-			side := matching.Str2Side(orderBook.Side)
-			if orderBook.OrderType == "limit" {
-				done, partial, partialQty, err := matchEngine.ProcessLimitOrder(side, orderBook.StrID(), orderBook.Volume, orderBook.Price)
+
+			side := matching.Str2Side(order.Side)
+			if order.OrderType == "limit" {
+				done, partial, partialQty, err := matchEngine.ProcessLimitOrder(side, order.StrID(), order.Volume, order.Price)
 				if err != nil {
 					panic(err)
 				}
 				log.Println(done, partial, partialQty)
-				models.Transaction(&orderBook, done)
-			} else if orderBook.OrderType == "market" {
-				done, partial, partialQty, left, err := matchEngine.ProcessMarketOrder(side, orderBook.Volume)
+				models.Transaction(&order, done)
+			} else if order.OrderType == "market" {
+				done, partial, partialQty, left, err := matchEngine.ProcessMarketOrder(side, order.Volume)
 				if err != nil {
 					panic(err)
 				}
 				log.Println(done, partial, partialQty, left)
-				models.Transaction(&orderBook, done)
+				models.Transaction(&order, done)
 			}
 
 			log.Println("=====================")
 			log.Println(matchEngine)
 			log.Println("===========交易后==========")
-		case "update_order_book":
-			var orderBook models.OrderBook
-			err = json.Unmarshal(event.Data, &orderBook)
+		case "update_order":
+			var order models.Order
+			err = json.Unmarshal(event.Data, &order)
 			if err != nil {
 				panic(err)
 			}
-			log.Println(orderBook)
-		case "cancel_order_book":
+			log.Println(order)
+		case "cancel_order":
 			// TODO
 		default:
 			fmt.Printf("Default")

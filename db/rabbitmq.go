@@ -3,6 +3,7 @@ package db
 import (
 	"sync"
 
+	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
 )
 
@@ -15,7 +16,7 @@ var (
 // @doc https://www.rabbitmq.com/tutorials/tutorial-two-go.html
 func initRabbitmqConnection() error {
 	var err error
-	rabbitmqConnection, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
+	rabbitmqConnection, err = amqp.Dial(viper.GetString("amqp_url"))
 	if err != nil {
 		return err
 	}
@@ -34,12 +35,12 @@ func initRabbitmqChannel() error {
 // DeclareMatchingWorkQueue ...
 func DeclareMatchingWorkQueue() amqp.Queue {
 	rabbitmqQ, err := rabbitmqChannel.QueueDeclare(
-		"exchange.matching.work.queue", // name
-		true,                           // durable
-		false,                          // delete when unused
-		false,                          // exclusive
-		false,                          // no-wait
-		nil,                            // arguments
+		viper.GetString("matching_work_queue_name"), // name
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
 	)
 	if err != nil {
 		panic(err)

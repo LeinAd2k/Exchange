@@ -1,9 +1,15 @@
 package main
 
 import (
+	"flag"
+	"log"
+
 	"github.com/FlowerWrong/exchange/actions"
+	"github.com/FlowerWrong/exchange/config"
 	"github.com/FlowerWrong/exchange/db"
+	"github.com/FlowerWrong/exchange/middlewares"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"gopkg.in/resty.v1"
 )
 
@@ -12,12 +18,16 @@ func main() {
 	resty.SetRESTMode()
 	resty.SetHeader("Accept", "application/json")
 
+	configFile := flag.String("config", "./config/settings.yml", "config file path")
+	flag.Parse()
+	err := config.Setup(*configFile)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Server launch in", config.AppEnv)
+
 	router := gin.Default()
-	router.GET("/orders", actions.OrderIndex)
-	router.GET("/order_books", actions.OrderBookIndex)
-	router.POST("/order_books", actions.OrderBookCreate)
-	router.PUT("/order_books/:id", actions.OrderBookUpdate)
-	router.DELETE("/order_books/:id", actions.OrderBookCancel)
+	router.Use(middlewares.RateLimit())
 
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -25,9 +35,23 @@ func main() {
 		})
 	})
 
+	v1 := router.Group("/api/v1")
+	{
+		v1.POST("/login", actions.Login)
+	}
+
+	authGroup := router.Group("/api/v1", middlewares.JWTAuth())
+	{
+		authGroup.GET("/orders", actions.OrderIndex)
+		authGroup.GET("/order_books", actions.OrderBookIndex)
+		authGroup.POST("/orders", actions.OrderCreate)
+		authGroup.PUT("/orders/:id", actions.OrderUpdate)
+		authGroup.DELETE("/orders/:id", actions.OrderCancel)
+	}
+
 	// rabbitmq
 	db.RabbitmqChannel()
 	db.DeclareMatchingWorkQueue()
 
-	router.Run(":8080")
+	router.Run(viper.GetString("api_url"))
 }

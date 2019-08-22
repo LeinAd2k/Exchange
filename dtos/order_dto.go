@@ -5,13 +5,13 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// OrderBookDTO ...
-type OrderBookDTO struct {
+// OrderDTO ...
+type OrderDTO struct {
 	models.BaseModel
 	UserID    uint64          `json:"user_id"`
 	Symbol    string          `json:"symbol"`
 	FundID    uint64          `json:"fund_id"`
-	Status    uint            `json:"status"`
+	State     uint            `json:"state"`
 	OrderType string          `json:"order_type"`
 	Side      string          `json:"side"`
 	Volume    decimal.Decimal `json:"volume"`

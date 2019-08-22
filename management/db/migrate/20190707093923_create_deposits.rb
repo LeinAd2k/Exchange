@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateDeposits < ActiveRecord::Migration[6.0]
   def change
     create_table :deposits, comment: '存款记录' do |t|

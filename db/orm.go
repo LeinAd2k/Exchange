@@ -5,6 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 
 func initORM() error {
 	var err error
-	orm, err = gorm.Open("mysql", "root:@/exchange_development?charset=utf8&parseTime=True&loc=Local")
+	orm, err = gorm.Open("mysql", viper.GetString("db_url"))
 	if err != nil {
 		return err
 	}

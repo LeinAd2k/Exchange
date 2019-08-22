@@ -1,6 +1,8 @@
 package models
 
 import (
+	"strconv"
+
 	"github.com/FlowerWrong/exchange/db"
 	"github.com/shopspring/decimal"
 )
@@ -8,21 +10,18 @@ import (
 // Order ...
 type Order struct {
 	BaseModel
-	BidUserID      uint64
-	BidUser        User
-	AskUserID      uint64
-	AskUser        User
-	FundID         uint64
-	Fund           Fund
-	BidOrderBookID uint64
-	BidOrderBook   OrderBook
-	AskOrderBookID uint64
-	AskOrderBook   OrderBook
-	Symbol         string
-	Volume         decimal.Decimal `json:"volume" sql:"DECIMAL(32,16)"`
-	Price          decimal.Decimal `json:"price" sql:"DECIMAL(32,16)"`
-	AskFee         decimal.Decimal `json:"ask_fee" sql:"DECIMAL(32,16)"`
-	BidFee         decimal.Decimal `json:"bid_fee" sql:"DECIMAL(32,16)"`
+	UserID    uint64          `json:"user_id"`
+	User      User            `json:"-"`
+	Symbol    string          `json:"symbol"`
+	FundID    uint64          `json:"fund_id"`
+	Fund      Fund            `json:"-"`
+	State     uint            `json:"state"`      // pending done cancel reject
+	OrderType string          `json:"order_type"` // market or limit
+	Side      string          `json:"side"`       // sell or buy
+	Volume    decimal.Decimal `json:"volume" sql:"DECIMAL(32,16)"`
+	Price     decimal.Decimal `json:"price" sql:"DECIMAL(32,16)"`
+	AskFee    decimal.Decimal `json:"ask_fee" sql:"DECIMAL(32,16)"`
+	BidFee    decimal.Decimal `json:"bid_fee" sql:"DECIMAL(32,16)"`
 }
 
 // CurrentPrice 返回最新成交价
@@ -30,4 +29,9 @@ func CurrentPrice(symbol string) decimal.Decimal {
 	var order Order
 	db.ORM().Where("symbol = ?", symbol).Last(&order)
 	return order.Price
+}
+
+// StrID return string id
+func (o *Order) StrID() string {
+	return strconv.FormatUint(o.ID, 10)
 }

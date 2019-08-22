@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateWithdraws < ActiveRecord::Migration[6.0]
   def change
     create_table :withdraws, comment: '提现记录' do |t|

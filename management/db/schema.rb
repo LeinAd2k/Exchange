@@ -61,29 +61,13 @@ ActiveRecord::Schema.define(version: 2019_07_07_093935) do
     t.index ["symbol"], name: "index_funds_on_symbol", unique: true
   end
 
-  create_table "order_books", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "下单记录 包括ask and bid", force: :cascade do |t|
-    t.bigint "user_id", null: false, comment: "用户"
+  create_table "orders", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "订单", force: :cascade do |t|
+    t.bigint "user_id", null: false, comment: "买方/卖方"
     t.string "symbol", null: false, comment: "简称 eg BTC_USD"
     t.bigint "fund_id", null: false, comment: "商品"
-    t.integer "status", default: 0, null: false, comment: "状态"
+    t.integer "state", default: 0, null: false, comment: "状态"
     t.string "order_type", null: false, comment: "订单类型 市价单market 限价单limit"
     t.string "side", null: false, comment: "sell or buy"
-    t.decimal "volume", precision: 32, scale: 16, default: "0.0", comment: "量"
-    t.decimal "price", precision: 32, scale: 16, default: "0.0", comment: "价格"
-    t.datetime "deleted_at", comment: "删除时间"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["fund_id"], name: "index_order_books_on_fund_id"
-    t.index ["user_id"], name: "index_order_books_on_user_id"
-  end
-
-  create_table "orders", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "订单", force: :cascade do |t|
-    t.bigint "bid_user_id", null: false, comment: "买方"
-    t.bigint "ask_user_id", null: false, comment: "卖方"
-    t.string "symbol", null: false, comment: "简称 eg BTC_USD"
-    t.bigint "fund_id", null: false, comment: "商品"
-    t.bigint "bid_order_book_id", null: false, comment: "买方委托单"
-    t.bigint "ask_order_book_id", null: false, comment: "卖方委托单"
     t.decimal "volume", precision: 32, scale: 16, default: "0.0", comment: "量"
     t.decimal "price", precision: 32, scale: 16, default: "0.0", comment: "价格"
     t.decimal "ask_fee", precision: 32, scale: 16, default: "0.0", comment: "卖单手续费"
@@ -91,11 +75,8 @@ ActiveRecord::Schema.define(version: 2019_07_07_093935) do
     t.datetime "deleted_at", comment: "删除时间"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["ask_order_book_id"], name: "index_orders_on_ask_order_book_id"
-    t.index ["ask_user_id"], name: "index_orders_on_ask_user_id"
-    t.index ["bid_order_book_id"], name: "index_orders_on_bid_order_book_id"
-    t.index ["bid_user_id"], name: "index_orders_on_bid_user_id"
     t.index ["fund_id"], name: "index_orders_on_fund_id"
+    t.index ["user_id"], name: "index_orders_on_user_id"
   end
 
   create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "用户", force: :cascade do |t|

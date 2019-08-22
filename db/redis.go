@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/go-redis/redis"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -12,7 +13,7 @@ var (
 )
 
 func initRedisClient() error {
-	redisOptions, err := redis.ParseURL("redis://:@localhost:6379/1")
+	redisOptions, err := redis.ParseURL(viper.GetString("redis_url"))
 	redisClient = redis.NewClient(redisOptions)
 
 	_, err = redisClient.Ping().Result()

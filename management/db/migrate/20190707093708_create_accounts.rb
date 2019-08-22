@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateAccounts < ActiveRecord::Migration[6.0]
   def change
     create_table :accounts, comment: '币种账户' do |t|

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sony/sonyflake"
+	"github.com/spf13/viper"
 )
 
 // @doc https://chai2010.cn/advanced-go-programming-book/ch6-cloud/ch6-01-dist-id.html
@@ -30,5 +31,5 @@ func main() {
 		c.JSON(http.StatusOK, sonyflake.Decompose(id))
 	})
 
-	router.Run(":8090")
+	router.Run(viper.GetString("flake_url"))
 }

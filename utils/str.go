@@ -16,6 +16,11 @@ func Int2Str(a int) string {
 	return strconv.Itoa(a)
 }
 
+// Uint642Str uint64 -> string
+func Uint642Str(a uint64) string {
+	return strconv.FormatUint(a, 10)
+}
+
 // Str2Int string -> int
 func Str2Int(a string) (int, error) {
 	b, err := strconv.Atoi(a)
