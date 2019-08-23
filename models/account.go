@@ -8,10 +8,10 @@ import (
 // Account ...
 type Account struct {
 	BaseModel
-	UserID     uint64
-	User       User
-	CurrencyID uint64
-	Currency   Currency
+	UserID     uint64          `json:"user_id"`
+	User       User            `json:"-"`
+	CurrencyID uint64          `json:"currency_id"`
+	Currency   Currency        `json:"-"`
 	Balance    decimal.Decimal `json:"balance" sql:"DECIMAL(32,16)"`
 	Locked     decimal.Decimal `json:"locked" sql:"DECIMAL(32,16)"`
 }

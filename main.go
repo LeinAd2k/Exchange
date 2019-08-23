@@ -43,10 +43,12 @@ func main() {
 	authGroup := router.Group("/api/v1", middlewares.JWTAuth())
 	{
 		authGroup.GET("/orders", actions.OrderIndex)
-		authGroup.GET("/order_books", actions.OrderBookIndex)
 		authGroup.POST("/orders", actions.OrderCreate)
 		authGroup.PUT("/orders/:id", actions.OrderUpdate)
 		authGroup.DELETE("/orders/:id", actions.OrderCancel)
+		authGroup.GET("/order_books", actions.OrderBookIndex)
+
+		authGroup.GET("/accounts", actions.AccountIndex)
 	}
 
 	// rabbitmq

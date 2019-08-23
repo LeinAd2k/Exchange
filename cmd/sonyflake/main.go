@@ -1,8 +1,11 @@
 package main
 
 import (
+	"flag"
+	"log"
 	"net/http"
 
+	"github.com/FlowerWrong/exchange/config"
 	"github.com/gin-gonic/gin"
 	"github.com/sony/sonyflake"
 	"github.com/spf13/viper"
@@ -21,6 +24,14 @@ func init() {
 
 // curl 127.0.0.1:8090
 func main() {
+	configFile := flag.String("config", "./config/settings.yml", "config file path")
+	flag.Parse()
+	err := config.Setup(*configFile)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Server launch in", config.AppEnv)
+
 	router := gin.Default()
 	router.GET("/", func(c *gin.Context) {
 		id, err := sf.NextID()

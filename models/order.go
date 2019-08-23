@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/FlowerWrong/exchange/db"
+	"github.com/FlowerWrong/exchange/services/matching"
 	"github.com/shopspring/decimal"
 )
 
@@ -34,4 +35,9 @@ func CurrentPrice(symbol string) decimal.Decimal {
 // StrID return string id
 func (o *Order) StrID() string {
 	return strconv.FormatUint(o.ID, 10)
+}
+
+// Transaction ...
+func Transaction(order *Order, done []*matching.Order) error {
+	return nil
 }

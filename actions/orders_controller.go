@@ -3,7 +3,6 @@ package actions
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/FlowerWrong/exchange/actions/forms"
 	"github.com/FlowerWrong/exchange/db"
@@ -26,26 +25,37 @@ func OrderIndex(c *gin.Context) {
 
 // OrderCreate ...
 func OrderCreate(c *gin.Context) {
+	var err error
 	var orderForm forms.OrderForm
-	if err := c.ShouldBindJSON(&orderForm); err != nil {
+	if err = c.ShouldBindJSON(&orderForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	order := &models.Order{}
-	mapper.AutoMapper(&orderForm, order)
+	err = mapper.AutoMapper(&orderForm, order)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	currentUserI, exists := c.Get("currentUser")
 	if exists == false {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "current user not found"})
 		return
 	}
-	currentUser := currentUserI.(*models.User)
+	currentUser := currentUserI.(models.User)
 	order.UserID = currentUser.ID
 
 	account := &models.Account{}
-	fund := models.Fund{}
-	db.ORM().First(&fund, order.FundID)
+	fund := &models.Fund{}
+	db.ORM().Where("symbol = ?", orderForm.Symbol).First(&fund)
 	order.FundID = fund.ID
+
+	// TODO 避免重复提交订单 redis 计时
+
+	// TODO 检验对手单够不够
+
+	// 校验钱够不够
 	if order.OrderType == "market" {
 		order.Price = models.CurrentPrice(order.Symbol) // 现价 TOOD 如果库里没有订单怎么办?
 	}
@@ -54,31 +64,28 @@ func OrderCreate(c *gin.Context) {
 		turnover := order.Volume.Mul(order.Price) // 单价 * 数量
 		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.RightCurrencyID)
 		if account.Balance.Sub(turnover).Sign() < 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney.Error()})
 			return
 		}
 	} else {
 		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.LeftCurrencyID)
 		if account.Balance.Sub(order.Volume).Sign() < 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney.Error()})
 			return
 		}
 	}
 
-	// TODO 检验对手单够不够
-	// TODO 校验钱够不够
-
 	// 相同品种，相同价格得单不合并
 
-	order.CreatedAt = time.Now()
-	order.UpdatedAt = time.Now()
+	now := utils.UTCNow()
+	order.CreatedAt = now
+	order.UpdatedAt = now
 
-	id, err := utils.NextID()
+	order.ID, err = utils.NextID()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	order.ID = id
 
 	// 发送给queue
 	b, err := json.Marshal(order)
@@ -92,7 +99,7 @@ func OrderCreate(c *gin.Context) {
 		panic(err)
 	}
 
-	db.RabbitmqChannel().Publish(
+	err = db.RabbitmqChannel().Publish(
 		"", // exchange
 		viper.GetString("matching_work_queue_name"), // routing key
 		false, // mandatory
@@ -102,9 +109,18 @@ func OrderCreate(c *gin.Context) {
 			ContentType:  "text/plain",
 			Body:         data,
 		})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
+	// response
 	orderDTO := &dtos.OrderDTO{}
-	mapper.AutoMapper(order, orderDTO)
+	err = mapper.AutoMapper(order, orderDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, orderDTO)
 }
 

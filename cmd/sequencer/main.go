@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
 	"runtime"
 	"time"
 
+	"github.com/FlowerWrong/exchange/config"
 	"github.com/FlowerWrong/exchange/db"
 	"github.com/FlowerWrong/exchange/models"
 	"github.com/FlowerWrong/exchange/services"
@@ -19,6 +21,14 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	configFile := flag.String("config", "./config/settings.yml", "config file path")
+	flag.Parse()
+	err := config.Setup(*configFile)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Server launch in", config.AppEnv)
+
 	matchEngine := matching.NewOrderBook()
 
 	// Work Queues
@@ -26,7 +36,7 @@ func main() {
 	rabbitmqQ := db.DeclareMatchingWorkQueue()
 
 	// TODO prefetch
-	err := rabbitmqCh.Qos(
+	err = rabbitmqCh.Qos(
 		1,     // prefetch count
 		0,     // prefetch size
 		false, // global
