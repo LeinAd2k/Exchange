@@ -8,6 +8,19 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const (
+	// Wait order
+	Wait = iota
+	// Pending order
+	Pending
+	// Cancelling order
+	Cancelling
+	// Canceled order
+	Canceled
+	// Done order
+	Done
+)
+
 // Order ...
 type Order struct {
 	BaseModel
@@ -37,7 +50,104 @@ func (o *Order) StrID() string {
 	return strconv.FormatUint(o.ID, 10)
 }
 
+func CreateOrder(order *Order, account *Account, locked decimal.Decimal) error {
+	tx := db.ORM().Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Error; err != nil {
+		return err
+	}
+
+	if err := tx.Create(order).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	account.Lock(locked)
+	if err := tx.Save(&account).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
+}
+
 // Transaction ...
 func Transaction(order *Order, done []*matching.Order) error {
-	return nil
+	tx := db.ORM().Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if err := tx.Error; err != nil {
+		return err
+	}
+
+	for _, matchingOrderDone := range done {
+		id := matchingOrderDone.IntID()
+		// 对方记录
+		orderDone := &Order{}
+		tx.Find(orderDone, id)
+		orderDone.Volume = orderDone.Volume.Sub(matchingOrderDone.Quantity())
+		if orderDone.Volume.Sign() == 0 {
+			orderDone.State = Done
+		}
+		if err := tx.Save(orderDone).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// 当前用户记录
+		order.Volume = order.Volume.Sub(matchingOrderDone.Quantity())
+		if order.Volume.Sign() == 0 {
+			order.State = Done
+		}
+		if err := tx.Save(order).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// 交易记录
+		trade := &Trade{}
+		trade.Symbol = order.Symbol
+		trade.FundID = order.FundID
+		trade.Volume = matchingOrderDone.Quantity()
+		trade.Price = matchingOrderDone.Price()
+		if order.Side == "buy" {
+			trade.BidUserID = order.UserID
+			trade.BidOrderID = order.ID
+			trade.AskUserID = orderDone.UserID
+			trade.AskOrderID = orderDone.ID
+		} else {
+			trade.BidUserID = orderDone.UserID
+			trade.BidOrderID = orderDone.ID
+			trade.AskUserID = order.UserID
+			trade.AskOrderID = order.ID
+		}
+		if err := tx.Create(trade).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// 账户结算
+		err := Settlement(trade, tx)
+		if err != nil {
+			return err
+		}
+	}
+
+	if order.OrderType == "market" {
+		order.State = Done
+		if err := tx.Save(order).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit().Error
 }

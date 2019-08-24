@@ -34,7 +34,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	err = db.Redis().SetNX(utils.Uint642Str(user.ID), token, 7*24*60*60*time.Second).Err()
+	err = db.Redis().Set(utils.Uint642Str(user.ID), token, 7*24*60*60*time.Second).Err()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

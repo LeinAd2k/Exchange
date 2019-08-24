@@ -91,13 +91,13 @@ func OrderCreate(c *gin.Context) {
 	}
 
 	// TODO use state machine
-	order.State = 0
+	order.State = models.Wait
 
-	// TODO 事务
-	db.ORM().Create(&order)
-	account.Locked = locked
-	account.Balance = account.Balance.Sub(locked)
-	db.ORM().Save(&account)
+	err = models.CreateOrder(order, account, locked)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	// 发送给queue
 	b, err := json.Marshal(order)

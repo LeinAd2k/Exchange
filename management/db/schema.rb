@@ -10,11 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_07_093935) do
+ActiveRecord::Schema.define(version: 2019_08_24_142252) do
 
   create_table "accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "币种账户", force: :cascade do |t|
     t.bigint "user_id", null: false, comment: "用户"
     t.bigint "currency_id", null: false, comment: "币种"
+    t.string "symbol", null: false, comment: "币种简称"
     t.decimal "balance", precision: 32, scale: 16, default: "0.0", comment: "余额"
     t.decimal "locked", precision: 32, scale: 16, default: "0.0", comment: "锁定金额"
     t.datetime "deleted_at", comment: "删除时间"
@@ -77,6 +78,22 @@ ActiveRecord::Schema.define(version: 2019_07_07_093935) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["fund_id"], name: "index_orders_on_fund_id"
     t.index ["user_id"], name: "index_orders_on_user_id"
+  end
+
+  create_table "trades", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "交易记录", force: :cascade do |t|
+    t.bigint "ask_user_id", null: false, comment: "卖方"
+    t.bigint "bid_user_id", null: false, comment: "买方"
+    t.bigint "ask_order_id", null: false, comment: "卖单"
+    t.bigint "bid_order_id", null: false, comment: "买单"
+    t.string "symbol", null: false, comment: "简称 eg BTC_USD"
+    t.bigint "fund_id", null: false, comment: "商品"
+    t.decimal "volume", precision: 32, scale: 16, default: "0.0", comment: "量"
+    t.decimal "price", precision: 32, scale: 16, default: "0.0", comment: "价格"
+    t.decimal "ask_fee", precision: 32, scale: 16, default: "0.0", comment: "卖单手续费"
+    t.decimal "bid_fee", precision: 32, scale: 16, default: "0.0", comment: "买单手续费"
+    t.datetime "deleted_at", comment: "删除时间"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "users", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "用户", force: :cascade do |t|

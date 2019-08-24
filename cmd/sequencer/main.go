@@ -73,36 +73,40 @@ func main() {
 				panic(err)
 			}
 
-			log.Println("===========交易前==========")
-			log.Println(matchEngine)
-			// backup order book depth to redis
-			obJSON, err := matchEngine.MarshalJSON()
-			if err != nil {
-				panic(err)
-			}
-			db.Redis().Set("matching_order_book", string(obJSON), 0)
-			log.Println("=====================")
-
-			side := matching.Str2Side(order.Side)
-			if order.OrderType == "limit" {
-				done, partial, partialQty, err := matchEngine.ProcessLimitOrder(side, order.StrID(), order.Volume, order.Price)
+			if matchEngine.Order(order.StrID()) != nil {
+				log.Println("Duplicated order", order.StrID())
+			} else {
+				log.Println("===========交易前==========")
+				log.Println(matchEngine)
+				// backup order book depth to redis
+				obJSON, err := matchEngine.MarshalJSON()
 				if err != nil {
 					panic(err)
 				}
-				log.Println(done, partial, partialQty)
-				models.Transaction(&order, done)
-			} else if order.OrderType == "market" {
-				done, partial, partialQty, left, err := matchEngine.ProcessMarketOrder(side, order.Volume)
-				if err != nil {
-					panic(err)
-				}
-				log.Println(done, partial, partialQty, left)
-				models.Transaction(&order, done)
-			}
+				db.Redis().Set("matching_order_book", string(obJSON), 0)
+				log.Println("=====================")
 
-			log.Println("=====================")
-			log.Println(matchEngine)
-			log.Println("===========交易后==========")
+				side := matching.Str2Side(order.Side)
+				if order.OrderType == "limit" {
+					done, partial, partialQty, err := matchEngine.ProcessLimitOrder(side, order.StrID(), order.Volume, order.Price)
+					if err != nil {
+						panic(err)
+					}
+					log.Println(done, partial, partialQty)
+					models.Transaction(&order, done)
+				} else if order.OrderType == "market" {
+					done, partial, partialQty, left, err := matchEngine.ProcessMarketOrder(side, order.Volume)
+					if err != nil {
+						panic(err)
+					}
+					log.Println(done, partial, partialQty, left)
+					models.Transaction(&order, done)
+				}
+
+				log.Println("=====================")
+				log.Println(matchEngine)
+				log.Println("===========交易后==========")
+			}
 		case "update_order":
 			var order models.Order
 			err = json.Unmarshal(event.Data, &order)
@@ -116,6 +120,9 @@ func main() {
 			fmt.Printf("Default")
 		}
 
-		delivery.Ack(false)
+		err = delivery.Ack(false)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
