@@ -44,7 +44,6 @@ func main() {
 	{
 		authGroup.GET("/orders", actions.OrderIndex)
 		authGroup.POST("/orders", actions.OrderCreate)
-		authGroup.PUT("/orders/:id", actions.OrderUpdate)
 		authGroup.DELETE("/orders/:id", actions.OrderCancel)
 		authGroup.GET("/order_books", actions.OrderBookIndex)
 

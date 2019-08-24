@@ -16,9 +16,31 @@ import (
 
 // OrderIndex ...
 func OrderIndex(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-	})
+	currentUserI, exists := c.Get("currentUser")
+	if exists == false {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": models.ErrUserNotFound.Error()})
+		return
+	}
+	currentUser := currentUserI.(models.User)
+
+	page, _ := utils.Str2Int64(c.DefaultQuery("page", "1"))
+	per, _ := utils.Str2Int64(c.DefaultQuery("per", "10"))
+
+	var orders []models.Order
+	db.ORM().Where("user_id = ?", currentUser.ID).Limit(per).Offset((page - 1) * per).Find(&orders)
+
+	// response
+	var orderDTOs []dtos.OrderDTO
+	for _, order := range orders {
+		orderDTO := &dtos.OrderDTO{}
+		err := mapper.AutoMapper(&order, orderDTO)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		orderDTOs = append(orderDTOs, *orderDTO)
+	}
+	c.JSON(http.StatusOK, orderDTOs)
 }
 
 // OrderCreate ...
@@ -38,7 +60,7 @@ func OrderCreate(c *gin.Context) {
 
 	currentUserI, exists := c.Get("currentUser")
 	if exists == false {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "current user not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": models.ErrUserNotFound.Error()})
 		return
 	}
 	currentUser := currentUserI.(models.User)
@@ -114,34 +136,13 @@ func OrderCreate(c *gin.Context) {
 	c.JSON(http.StatusOK, orderDTO)
 }
 
-// OrderUpdate ...
-func OrderUpdate(c *gin.Context) {
-	id := c.Param("id")
-	var orderUpdate models.Order
-	if err := c.ShouldBindJSON(&orderUpdate); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// do not update here
-	var order models.Order
-	db.ORM().Where("id = ? and volume > 0", id).First(&order)
-	order.Volume = orderUpdate.Volume
-	order.Price = orderUpdate.Price
-	db.ORM().Save(&order)
-
-	// 发送给queue
-
-	c.JSON(http.StatusOK, order)
-}
-
 // OrderCancel ...
 func OrderCancel(c *gin.Context) {
 	id := c.Param("id")
 
 	currentUserI, exists := c.Get("currentUser")
 	if exists == false {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "current user not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": models.ErrUserNotFound.Error()})
 		return
 	}
 	currentUser := currentUserI.(models.User)
