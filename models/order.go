@@ -67,8 +67,10 @@ func CreateOrder(order *Order, account *Account, locked decimal.Decimal) error {
 		return err
 	}
 
-	account.Lock(locked)
-	if err := tx.Save(&account).Error; err != nil {
+	accountUpdate := Account{}
+	accountUpdate.Locked = account.Locked.Add(locked)
+	accountUpdate.Balance = account.Balance.Sub(locked)
+	if err := tx.Model(account).Updates(accountUpdate).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -90,60 +92,70 @@ func Transaction(order *Order, done []*matching.Order) error {
 
 	for _, matchingOrderDone := range done {
 		id := matchingOrderDone.IntID()
-		// 对方记录
 		orderDone := &Order{}
 		tx.Find(orderDone, id)
-		orderDone.Volume = orderDone.Volume.Sub(matchingOrderDone.Quantity())
-		if orderDone.Volume.Sign() == 0 {
-			orderDone.State = Done
-		}
-		if err := tx.Save(orderDone).Error; err != nil {
-			tx.Rollback()
-			return err
+
+		{
+			// 对方记录
+			orderDoneUpdate := Order{}
+			orderDoneUpdate.Volume = orderDone.Volume.Sub(matchingOrderDone.Quantity())
+			if orderDoneUpdate.Volume.Sign() == 0 {
+				orderDoneUpdate.State = Done
+			}
+			if err := tx.Model(orderDone).Updates(orderDoneUpdate).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
 		}
 
-		// 当前用户记录
-		order.Volume = order.Volume.Sub(matchingOrderDone.Quantity())
-		if order.Volume.Sign() == 0 {
-			order.State = Done
-		}
-		if err := tx.Save(order).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		// 交易记录
-		trade := &Trade{}
-		trade.Symbol = order.Symbol
-		trade.FundID = order.FundID
-		trade.Volume = matchingOrderDone.Quantity()
-		trade.Price = matchingOrderDone.Price()
-		if order.Side == "buy" {
-			trade.BidUserID = order.UserID
-			trade.BidOrderID = order.ID
-			trade.AskUserID = orderDone.UserID
-			trade.AskOrderID = orderDone.ID
-		} else {
-			trade.BidUserID = orderDone.UserID
-			trade.BidOrderID = orderDone.ID
-			trade.AskUserID = order.UserID
-			trade.AskOrderID = order.ID
-		}
-		if err := tx.Create(trade).Error; err != nil {
-			tx.Rollback()
-			return err
+		{
+			// 当前用户记录
+			orderUpdate := Order{}
+			orderUpdate.Volume = order.Volume.Sub(matchingOrderDone.Quantity())
+			if orderUpdate.Volume.Sign() == 0 {
+				orderUpdate.State = Done
+			}
+			if err := tx.Model(order).Updates(orderUpdate).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
 		}
 
-		// 账户结算
-		err := Settlement(trade, tx)
-		if err != nil {
-			return err
+		{
+			// 交易记录
+			trade := &Trade{}
+			trade.Symbol = order.Symbol
+			trade.FundID = order.FundID
+			trade.Volume = matchingOrderDone.Quantity()
+			trade.Price = matchingOrderDone.Price()
+			if order.Side == "buy" {
+				trade.BidUserID = order.UserID
+				trade.BidOrderID = order.ID
+				trade.AskUserID = orderDone.UserID
+				trade.AskOrderID = orderDone.ID
+			} else {
+				trade.BidUserID = orderDone.UserID
+				trade.BidOrderID = orderDone.ID
+				trade.AskUserID = order.UserID
+				trade.AskOrderID = order.ID
+			}
+			if err := tx.Create(trade).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+
+			// 账户结算
+			err := Settlement(trade, tx)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	if order.OrderType == "market" {
-		order.State = Done
-		if err := tx.Save(order).Error; err != nil {
+		orderUpdate := Order{}
+		orderUpdate.State = Done
+		if err := tx.Model(order).Updates(orderUpdate).Error; err != nil {
 			tx.Rollback()
 			return err
 		}

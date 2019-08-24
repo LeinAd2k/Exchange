@@ -50,7 +50,7 @@ func Settlement(trade *Trade, tx *gorm.DB) error {
 		accountRight := &Account{}
 		FindAccountByUserIDAndCurrencyID(tx, accountRight, trade.BidUserID, fund.RightCurrencyID)
 		accountRight.UnLock(locked)
-		if err := tx.Save(accountRight).Error; err != nil {
+		if err := tx.Model(&accountRight).Update("locked", accountRight.Locked).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -59,7 +59,7 @@ func Settlement(trade *Trade, tx *gorm.DB) error {
 		accountLeft := &Account{}
 		FindAccountByUserIDAndCurrencyID(tx, accountLeft, trade.BidUserID, fund.LeftCurrencyID)
 		accountLeft.Balance = accountLeft.Balance.Add(trade.Volume)
-		if err := tx.Save(accountLeft).Error; err != nil {
+		if err := tx.Model(&accountLeft).Update("balance", accountLeft.Balance).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -70,7 +70,7 @@ func Settlement(trade *Trade, tx *gorm.DB) error {
 		accountRight := &Account{}
 		FindAccountByUserIDAndCurrencyID(tx, accountRight, trade.AskUserID, fund.RightCurrencyID)
 		accountRight.Balance = accountRight.Balance.Add(locked)
-		if err := tx.Save(accountRight).Error; err != nil {
+		if err := tx.Model(&accountRight).Update("balance", accountRight.Balance).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -79,7 +79,7 @@ func Settlement(trade *Trade, tx *gorm.DB) error {
 		accountLeft := &Account{}
 		FindAccountByUserIDAndCurrencyID(tx, accountLeft, trade.AskUserID, fund.LeftCurrencyID)
 		accountLeft.UnLock(trade.Volume)
-		if err := tx.Save(accountLeft).Error; err != nil {
+		if err := tx.Model(&accountLeft).Update("locked", accountLeft.Locked).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
