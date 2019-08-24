@@ -12,6 +12,7 @@ import (
 	"github.com/FlowerWrong/exchange/utils"
 	"github.com/devfeel/mapper"
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
 )
@@ -46,7 +47,6 @@ func OrderCreate(c *gin.Context) {
 	currentUser := currentUserI.(models.User)
 	order.UserID = currentUser.ID
 
-	account := &models.Account{}
 	fund := &models.Fund{}
 	db.ORM().Where("symbol = ?", orderForm.Symbol).First(&fund)
 	order.FundID = fund.ID
@@ -59,17 +59,20 @@ func OrderCreate(c *gin.Context) {
 	if order.OrderType == "market" {
 		order.Price = models.CurrentPrice(order.Symbol) // 现价 TOOD 如果库里没有订单怎么办?
 	}
+	account := &models.Account{}
+	var locked decimal.Decimal
 	if order.Side == "buy" {
 		// BTC_USD 为例，购买动作即用USD买BTC，锁定账户的USD
-		turnover := order.Volume.Mul(order.Price) // 单价 * 数量
+		locked = order.Volume.Mul(order.Price) // 单价 * 数量
 		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.RightCurrencyID)
-		if account.Balance.Sub(turnover).Sign() < 0 {
+		if account.Balance.Sub(locked).Sign() < 0 {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney.Error()})
 			return
 		}
 	} else {
 		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.LeftCurrencyID)
-		if account.Balance.Sub(order.Volume).Sign() < 0 {
+		locked = order.Volume
+		if account.Balance.Sub(locked).Sign() < 0 {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney.Error()})
 			return
 		}
@@ -86,6 +89,15 @@ func OrderCreate(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// TODO use state machine
+	order.State = 0
+
+	// TODO 事务
+	db.ORM().Create(&order)
+	account.Locked = locked
+	account.Balance = account.Balance.Sub(locked)
+	db.ORM().Save(&account)
 
 	// 发送给queue
 	b, err := json.Marshal(order)

@@ -16,9 +16,9 @@ type Order struct {
 	Symbol    string          `json:"symbol"`
 	FundID    uint64          `json:"fund_id"`
 	Fund      Fund            `json:"-"`
-	State     uint            `json:"state"`      // pending done cancel reject
-	OrderType string          `json:"order_type"` // market or limit
-	Side      string          `json:"side"`       // sell or buy
+	State     uint            `gorm:"default:0" json:"state"` // wait pending done cancel reject
+	OrderType string          `json:"order_type"`             // market or limit
+	Side      string          `json:"side"`                   // sell or buy
 	Volume    decimal.Decimal `json:"volume" sql:"DECIMAL(32,16)"`
 	Price     decimal.Decimal `json:"price" sql:"DECIMAL(32,16)"`
 	AskFee    decimal.Decimal `json:"ask_fee" sql:"DECIMAL(32,16)"`
