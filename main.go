@@ -45,9 +45,10 @@ func main() {
 		authGroup.GET("/orders", actions.OrderIndex)
 		authGroup.POST("/orders", actions.OrderCreate)
 		authGroup.DELETE("/orders/:id", actions.OrderCancel)
-		authGroup.GET("/order_books", actions.OrderBookIndex)
 
 		authGroup.GET("/accounts", actions.AccountIndex)
+
+		authGroup.GET("/order_books", actions.OrderBookIndex)
 	}
 
 	// rabbitmq

@@ -194,10 +194,12 @@ func (ob *OrderBook) Order(orderID string) *Order {
 // --------------
 // bids: 90  -> 5
 //       80  -> 1
-func (ob *OrderBook) Depth() (asks, bids []*PriceLevel) {
+func (ob *OrderBook) Depth() ([]PriceLevel, []PriceLevel) {
+	asks := make([]PriceLevel, 0)
+	bids := make([]PriceLevel, 0)
 	level := ob.asks.MaxPriceQueue()
 	for level != nil {
-		asks = append(asks, &PriceLevel{
+		asks = append(asks, PriceLevel{
 			Price:    level.Price(),
 			Quantity: level.Volume(),
 		})
@@ -206,13 +208,19 @@ func (ob *OrderBook) Depth() (asks, bids []*PriceLevel) {
 
 	level = ob.bids.MaxPriceQueue()
 	for level != nil {
-		bids = append(bids, &PriceLevel{
+		bids = append(bids, PriceLevel{
 			Price:    level.Price(),
 			Quantity: level.Volume(),
 		})
 		level = ob.bids.LessThan(level.Price())
 	}
-	return
+	return asks, bids
+}
+
+// AskBidDepth ...
+func (ob *OrderBook) AskBidDepth() *Depth {
+	asks, bids := ob.Depth()
+	return &Depth{Asks: asks, Bids: bids}
 }
 
 // CancelOrder removes order with given ID from the order book

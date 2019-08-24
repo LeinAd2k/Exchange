@@ -3,13 +3,19 @@ package actions
 import (
 	"net/http"
 
-	"github.com/FlowerWrong/exchange/utils"
+	"github.com/FlowerWrong/exchange/db"
 	"github.com/gin-gonic/gin"
 )
 
 // OrderBookIndex ...
 func OrderBookIndex(c *gin.Context) {
-	symbol := c.DefaultQuery("symbol", "all")
+	symbol := c.Query("symbol")
 
-	c.JSON(http.StatusOK, utils.APIRes{Code: 0, Message: symbol})
+	data, err := db.Redis().Get(db.DepthKey(symbol)).Result()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json", []byte(data))
 }

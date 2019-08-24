@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"math/rand"
 	"runtime"
@@ -70,22 +69,15 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		log.Println("=====================")
+		log.Println(matchEngine)
+		log.Println("===========交易前==========")
 
 		switch event.Name {
 		case "create_order":
 			if matchEngine.Order(order.StrID()) != nil {
 				log.Println("Duplicated order", order.StrID())
 			} else {
-				log.Println("===========交易前==========")
-				log.Println(matchEngine)
-				// backup order book depth to redis
-				obJSON, err := matchEngine.MarshalJSON()
-				if err != nil {
-					panic(err)
-				}
-				db.Redis().Set("matching_order_book", string(obJSON), 0)
-				log.Println("=====================")
-
 				side := matching.Str2Side(order.Side)
 				if order.OrderType == "limit" {
 					done, partial, partialQty, err := matchEngine.ProcessLimitOrder(side, order.StrID(), order.Volume, order.Price)
@@ -102,18 +94,7 @@ func main() {
 					log.Println(done, partial, partialQty, left)
 					models.Transaction(&order, done)
 				}
-
-				log.Println("=====================")
-				log.Println(matchEngine)
-				log.Println("===========交易后==========")
 			}
-		case "update_order":
-			var order models.Order
-			err = json.Unmarshal(event.Data, &order)
-			if err != nil {
-				panic(err)
-			}
-			log.Println(order)
 		case "cancel_order":
 			if matchEngine.Order(order.StrID()) != nil {
 				err = order.CancellingOrder()
@@ -126,8 +107,26 @@ func main() {
 				log.Println("Order not found in matching engine", order.StrID())
 			}
 		default:
-			fmt.Printf("Default")
+			log.Println("Unknown envent", event.Name)
 		}
+
+		// backup order book depth to redis
+		obJSON, err := matchEngine.MarshalJSON()
+		if err != nil {
+			panic(err)
+		}
+		db.Redis().Set(db.OrderBookKey(order.Symbol), string(obJSON), 0)
+
+		depth := matchEngine.AskBidDepth()
+		depthJSON, err := json.Marshal(depth)
+		if err != nil {
+			panic(err)
+		}
+		db.Redis().Set(db.DepthKey(order.Symbol), string(depthJSON), 0)
+
+		log.Println("===========交易后==========")
+		log.Println(matchEngine)
+		log.Println("=====================")
 
 		err = delivery.Ack(false)
 		if err != nil {

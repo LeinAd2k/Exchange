@@ -35,3 +35,23 @@ func Redis() *redis.Client {
 	}
 	return redisClient
 }
+
+// AsksKey ...
+func AsksKey(symbol string) string {
+	return "exchange:" + symbol + ":depth:asks"
+}
+
+// BidsKey ...
+func BidsKey(symbol string) string {
+	return "exchange:" + symbol + ":depth:bids"
+}
+
+// DepthKey ...
+func DepthKey(symbol string) string {
+	return "exchange:" + symbol + ":depth"
+}
+
+// OrderBookKey ...
+func OrderBookKey(symbol string) string {
+	return "exchange:" + symbol + ":order_book"
+}
