@@ -50,7 +50,8 @@ func (o *Order) StrID() string {
 	return strconv.FormatUint(o.ID, 10)
 }
 
-func CreateOrder(order *Order, account *Account, locked decimal.Decimal) error {
+// CreateOrder ...
+func (o *Order) CreateOrder(account *Account, locked decimal.Decimal) error {
 	tx := db.ORM().Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -62,7 +63,7 @@ func CreateOrder(order *Order, account *Account, locked decimal.Decimal) error {
 		return err
 	}
 
-	if err := tx.Create(order).Error; err != nil {
+	if err := tx.Create(o).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -70,6 +71,56 @@ func CreateOrder(order *Order, account *Account, locked decimal.Decimal) error {
 	accountUpdate := Account{}
 	accountUpdate.Locked = account.Locked.Add(locked)
 	accountUpdate.Balance = account.Balance.Sub(locked)
+	if err := tx.Model(account).Updates(accountUpdate).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
+}
+
+// CancellingOrder ...
+func (o *Order) CancellingOrder() error {
+	if o.State != Cancelling {
+		return ErrCancelNoneCancellingOrder
+	}
+	if o.OrderType == "market" {
+		return ErrCancelMarketOrder
+	}
+
+	tx := db.ORM().Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Error; err != nil {
+		return err
+	}
+
+	orderUpdate := Order{State: Canceled}
+	if err := tx.Model(&o).Updates(orderUpdate).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	fund := &Fund{}
+	tx.Where("symbol = ?", o.Symbol).First(&fund)
+
+	account := &Account{}
+	accountUpdate := Account{}
+	if o.Side == "buy" {
+		FindAccountByUserIDAndCurrencyID(tx, account, o.UserID, fund.RightCurrencyID)
+		locked := o.Volume.Mul(o.Price)
+		accountUpdate.Locked = account.Locked.Sub(locked)
+		accountUpdate.Balance = account.Balance.Add(locked)
+	} else {
+		FindAccountByUserIDAndCurrencyID(tx, account, o.UserID, fund.LeftCurrencyID)
+		locked := o.Volume
+		accountUpdate.Locked = account.Locked.Sub(locked)
+		accountUpdate.Balance = account.Balance.Add(locked)
+	}
 	if err := tx.Model(account).Updates(accountUpdate).Error; err != nil {
 		tx.Rollback()
 		return err

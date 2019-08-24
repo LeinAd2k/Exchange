@@ -110,3 +110,17 @@ func Bind(name, routingKey, xName string) {
 		panic(err)
 	}
 }
+
+// PublishToMatching ...
+func PublishToMatching(data []byte) error {
+	return RabbitmqChannel().Publish(
+		"", // exchange
+		viper.GetString("matching_work_queue_name"), // routing key
+		false, // mandatory
+		false, // immediate
+		amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "text/plain",
+			Body:         data,
+		})
+}

@@ -65,14 +65,14 @@ func main() {
 			panic(err)
 		}
 
+		var order models.Order
+		err = json.Unmarshal(event.Data, &order)
+		if err != nil {
+			panic(err)
+		}
+
 		switch event.Name {
 		case "create_order":
-			var order models.Order
-			err = json.Unmarshal(event.Data, &order)
-			if err != nil {
-				panic(err)
-			}
-
 			if matchEngine.Order(order.StrID()) != nil {
 				log.Println("Duplicated order", order.StrID())
 			} else {
@@ -115,7 +115,16 @@ func main() {
 			}
 			log.Println(order)
 		case "cancel_order":
-			// TODO
+			if matchEngine.Order(order.StrID()) != nil {
+				err = order.CancellingOrder()
+				if err != nil {
+					log.Println(err)
+				} else {
+					matchEngine.CancelOrder(order.StrID())
+				}
+			} else {
+				log.Println("Order not found in matching engine", order.StrID())
+			}
 		default:
 			fmt.Printf("Default")
 		}

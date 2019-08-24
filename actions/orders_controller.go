@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/FlowerWrong/exchange/actions/forms"
@@ -13,8 +12,6 @@ import (
 	"github.com/devfeel/mapper"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
-	"github.com/spf13/viper"
-	"github.com/streadway/amqp"
 )
 
 // OrderIndex ...
@@ -93,34 +90,15 @@ func OrderCreate(c *gin.Context) {
 	// TODO use state machine
 	order.State = models.Wait
 
-	err = models.CreateOrder(order, account, locked)
+	err = order.CreateOrder(account, locked)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// 发送给queue
-	b, err := json.Marshal(order)
-	if err != nil {
-		panic(err)
-	}
-	raw := json.RawMessage(b)
-	event := &services.Event{Name: "create_order", Data: raw}
-	data, err := json.Marshal(event)
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.RabbitmqChannel().Publish(
-		"", // exchange
-		viper.GetString("matching_work_queue_name"), // routing key
-		false, // mandatory
-		false, // immediate
-		amqp.Publishing{
-			DeliveryMode: amqp.Persistent,
-			ContentType:  "text/plain",
-			Body:         data,
-		})
+	data := services.OrderEvent(order, "create_order")
+	err = db.PublishToMatching(data)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -160,11 +138,44 @@ func OrderUpdate(c *gin.Context) {
 // OrderCancel ...
 func OrderCancel(c *gin.Context) {
 	id := c.Param("id")
+
+	currentUserI, exists := c.Get("currentUser")
+	if exists == false {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "current user not found"})
+		return
+	}
+	currentUser := currentUserI.(models.User)
+
 	// do not update here
 	var order models.Order
-	db.ORM().Where("id = ?", id).First(&order).Delete(&order)
+	db.ORM().Where("id = ? and user_id = ?", id, currentUser.ID).First(&order)
+	if order.State != models.Wait {
+		c.JSON(http.StatusBadRequest, gin.H{"error": models.ErrCancelNoneWaitOrder.Error()})
+		return
+	}
+
+	if order.OrderType == "market" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": models.ErrCancelMarketOrder.Error()})
+		return
+	}
+
+	orderUpdate := models.Order{State: models.Cancelling}
+	db.ORM().Model(&order).Updates(orderUpdate)
 
 	// 发送给queue
+	data := services.OrderEvent(&order, "cancel_order")
+	err := db.PublishToMatching(data)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-	c.JSON(http.StatusOK, utils.APIRes{Code: 0, Message: "ok"})
+	// response
+	orderDTO := &dtos.OrderDTO{}
+	err = mapper.AutoMapper(&order, orderDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, orderDTO)
 }
