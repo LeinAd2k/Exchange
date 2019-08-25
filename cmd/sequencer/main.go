@@ -13,6 +13,7 @@ import (
 	"github.com/FlowerWrong/exchange/models"
 	"github.com/FlowerWrong/exchange/services"
 	"github.com/FlowerWrong/exchange/services/matching"
+	"github.com/streadway/amqp"
 )
 
 func main() {
@@ -26,37 +27,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("Server launch in", config.AppEnv)
+	log.Println("Matching engine launch in", config.AppEnv)
 
-	matchEngine := matching.NewOrderBook()
-
-	// Work Queues
-	rabbitmqCh := db.RabbitmqChannel()
-	rabbitmqQ := db.DeclareMatchingWorkQueue()
-
-	// TODO prefetch
-	err = rabbitmqCh.Qos(
-		1,     // prefetch count
-		0,     // prefetch size
-		false, // global
-	)
-	if err != nil {
-		panic(err)
+	orderBookManager := matching.NewOrderBookManager()
+	var funds []models.Fund
+	db.ORM().Find(&funds)
+	for _, fund := range funds {
+		orderBookManager.Add(fund.Symbol)
 	}
 
-	deliveryChan, err := rabbitmqCh.Consume(
-		rabbitmqQ.Name, // queue
-		"",             // consumer
-		false,          // auto-ack
-		false,          // exclusive
-		false,          // no-local
-		false,          // no-wait
-		nil,            // args
-	)
-	if err != nil {
-		panic(err)
-	}
+	// reload db orders to matching engine when start
+	models.LoadOrdersToMatchingEngine(orderBookManager)
 
+	deliveryChan := initRabbitmq()
 	for delivery := range deliveryChan {
 		log.Printf("Received a message: %s", delivery.Body)
 		var event services.Event
@@ -69,6 +52,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		matchEngine := orderBookManager.Get(order.Symbol)
 		log.Println("=====================")
 		log.Println(matchEngine)
 		log.Println("===========交易前==========")
@@ -111,18 +95,15 @@ func main() {
 		}
 
 		// backup order book depth to redis
-		obJSON, err := matchEngine.MarshalJSON()
+		err = matchEngine.Backup(order.Symbol)
 		if err != nil {
-			panic(err)
+			log.Println(err)
 		}
-		db.Redis().Set(db.OrderBookKey(order.Symbol), string(obJSON), 0)
 
-		depth := matchEngine.AskBidDepth()
-		depthJSON, err := json.Marshal(depth)
+		err = matchEngine.BackupDepth(order.Symbol)
 		if err != nil {
-			panic(err)
+			log.Println(err)
 		}
-		db.Redis().Set(db.DepthKey(order.Symbol), string(depthJSON), 0)
 
 		log.Println("===========交易后==========")
 		log.Println(matchEngine)
@@ -133,4 +114,32 @@ func main() {
 			panic(err)
 		}
 	}
+}
+
+func initRabbitmq() <-chan amqp.Delivery {
+	// Work Queues
+	rabbitmqCh := db.RabbitmqChannel()
+	rabbitmqQ := db.DeclareMatchingWorkQueue()
+	// TODO prefetch
+	err := rabbitmqCh.Qos(
+		1,     // prefetch count
+		0,     // prefetch size
+		false, // global
+	)
+	if err != nil {
+		panic(err)
+	}
+	deliveryChan, err := rabbitmqCh.Consume(
+		rabbitmqQ.Name, // queue
+		"",             // consumer
+		false,          // auto-ack
+		false,          // exclusive
+		false,          // no-local
+		false,          // no-wait
+		nil,            // args
+	)
+	if err != nil {
+		panic(err)
+	}
+	return deliveryChan
 }

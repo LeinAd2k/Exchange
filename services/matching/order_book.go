@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/FlowerWrong/exchange/db"
 	"github.com/shopspring/decimal"
 )
 
@@ -318,5 +319,32 @@ func (ob *OrderBook) UnmarshalJSON(data []byte) error {
 		ob.orders[order.Value.(*Order).ID()] = order
 	}
 
+	return nil
+}
+
+// Backup to redis
+func (ob *OrderBook) Backup(symbol string) error {
+	obJSON, err := ob.MarshalJSON()
+	if err != nil {
+		return err
+	}
+	err = db.Redis().Set(db.OrderBookKey(symbol), string(obJSON), 0).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// BackupDepth to redis
+func (ob *OrderBook) BackupDepth(symbol string) error {
+	depth := ob.AskBidDepth()
+	depthJSON, err := json.Marshal(depth)
+	if err != nil {
+		return err
+	}
+	err = db.Redis().Set(db.DepthKey(symbol), string(depthJSON), 0).Err()
+	if err != nil {
+		return err
+	}
 	return nil
 }

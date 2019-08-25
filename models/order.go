@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/FlowerWrong/exchange/db"
@@ -48,6 +49,36 @@ func CurrentPrice(symbol string) decimal.Decimal {
 // StrID return string id
 func (o *Order) StrID() string {
 	return strconv.FormatUint(o.ID, 10)
+}
+
+// LoadOrdersToMatchingEngine ...
+func LoadOrdersToMatchingEngine(obm *matching.OrderBookManager) {
+	var orders []Order
+	db.ORM().Where("state = ?", Wait).Order("created_at asc").Find(&orders)
+	for _, order := range orders {
+		ob := obm.Get(order.Symbol)
+		side := matching.Str2Side(order.Side)
+		if order.OrderType == "limit" {
+			ob.ProcessLimitOrder(side, order.StrID(), order.Volume, order.Price)
+		} else if order.OrderType == "market" {
+			ob.ProcessMarketOrder(side, order.Volume)
+		}
+	}
+
+	var funds []Fund
+	db.ORM().Find(&funds)
+	for _, fund := range funds {
+		ob := obm.Get(fund.Symbol)
+		err := ob.Backup(fund.Symbol)
+		if err != nil {
+			log.Println(err)
+		}
+
+		err = ob.BackupDepth(fund.Symbol)
+		if err != nil {
+			log.Println(err)
+		}
+	}
 }
 
 // CreateOrder ...
