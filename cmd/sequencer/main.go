@@ -71,6 +71,10 @@ func main() {
 					log.Println(done, partial, partialQty)
 					models.Transaction(&order, done)
 				} else if order.OrderType == "market" {
+					if order.Side == "buy" {
+						prices := matchEngine.CalculateMarketPrices(side, order.Volume)
+						log.Println(prices)
+					}
 					done, partial, partialQty, left, err := matchEngine.ProcessMarketOrder(side, order.Volume)
 					if err != nil {
 						panic(err)

@@ -1,6 +1,9 @@
 package models
 
-import "github.com/shopspring/decimal"
+import (
+	"github.com/FlowerWrong/exchange/db"
+	"github.com/shopspring/decimal"
+)
 
 // Trade ...
 type Trade struct {
@@ -16,4 +19,15 @@ type Trade struct {
 	Price      decimal.Decimal `json:"price" sql:"DECIMAL(32,16)"`
 	AskFee     decimal.Decimal `json:"ask_fee" sql:"DECIMAL(32,16)"`
 	BidFee     decimal.Decimal `json:"bid_fee" sql:"DECIMAL(32,16)"`
+}
+
+// CurrentPrice 返回最新成交价
+func CurrentPrice(symbol string) decimal.Decimal {
+	var trade Trade
+	err := db.ORM().Where("symbol = ?", symbol).Last(&trade).Error
+	if err != nil {
+		return decimal.NewFromFloat(0)
+	}
+
+	return trade.Price
 }

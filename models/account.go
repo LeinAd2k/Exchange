@@ -39,27 +39,25 @@ func FindAccountByUserIDAndCurrencyID(tx *gorm.DB, account *Account, userID, cur
 }
 
 // Settlement 账户结算
-func Settlement(trade *Trade, tx *gorm.DB) error {
-	fund := &Fund{}
-	tx.First(fund, trade.FundID)
+func Settlement(trade *Trade, fund *Fund, tx *gorm.DB) error {
 	locked := trade.Volume.Mul(trade.Price)
 	// BTC_USD 为例，购买动作即用USD买BTC
 	{
 		// 买方
 		// USD减少
-		accountRight := &Account{}
-		FindAccountByUserIDAndCurrencyID(tx, accountRight, trade.BidUserID, fund.RightCurrencyID)
-		accountRight.UnLock(locked)
-		if err := tx.Model(&accountRight).Update("locked", accountRight.Locked).Error; err != nil {
+		bidAccountRight := &Account{}
+		FindAccountByUserIDAndCurrencyID(tx, bidAccountRight, trade.BidUserID, fund.RightCurrencyID)
+		bidAccountRight.UnLock(locked)
+		if err := tx.Model(&bidAccountRight).Update("locked", bidAccountRight.Locked).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
 
 		// BTC增加
-		accountLeft := &Account{}
-		FindAccountByUserIDAndCurrencyID(tx, accountLeft, trade.BidUserID, fund.LeftCurrencyID)
-		accountLeft.Balance = accountLeft.Balance.Add(trade.Volume)
-		if err := tx.Model(&accountLeft).Update("balance", accountLeft.Balance).Error; err != nil {
+		bidAccountLeft := &Account{}
+		FindAccountByUserIDAndCurrencyID(tx, bidAccountLeft, trade.BidUserID, fund.LeftCurrencyID)
+		bidAccountLeft.Balance = bidAccountLeft.Balance.Add(trade.Volume)
+		if err := tx.Model(&bidAccountLeft).Update("balance", bidAccountLeft.Balance).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -67,19 +65,19 @@ func Settlement(trade *Trade, tx *gorm.DB) error {
 	{
 		// 卖方
 		// USD增加
-		accountRight := &Account{}
-		FindAccountByUserIDAndCurrencyID(tx, accountRight, trade.AskUserID, fund.RightCurrencyID)
-		accountRight.Balance = accountRight.Balance.Add(locked)
-		if err := tx.Model(&accountRight).Update("balance", accountRight.Balance).Error; err != nil {
+		askAccountRight := &Account{}
+		FindAccountByUserIDAndCurrencyID(tx, askAccountRight, trade.AskUserID, fund.RightCurrencyID)
+		askAccountRight.Balance = askAccountRight.Balance.Add(locked)
+		if err := tx.Model(&askAccountRight).Update("balance", askAccountRight.Balance).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
 
 		// BTC减少
-		accountLeft := &Account{}
-		FindAccountByUserIDAndCurrencyID(tx, accountLeft, trade.AskUserID, fund.LeftCurrencyID)
-		accountLeft.UnLock(trade.Volume)
-		if err := tx.Model(&accountLeft).Update("locked", accountLeft.Locked).Error; err != nil {
+		askAccountLeft := &Account{}
+		FindAccountByUserIDAndCurrencyID(tx, askAccountLeft, trade.AskUserID, fund.LeftCurrencyID)
+		askAccountLeft.UnLock(trade.Volume)
+		if err := tx.Model(&askAccountLeft).Update("locked", askAccountLeft.Locked).Error; err != nil {
 			tx.Rollback()
 			return err
 		}

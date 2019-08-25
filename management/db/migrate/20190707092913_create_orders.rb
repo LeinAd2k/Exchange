@@ -10,6 +10,7 @@ class CreateOrders < ActiveRecord::Migration[6.0]
       t.string :order_type, null: false, comment: '订单类型 市价单market 限价单limit'
       t.string :side, null: false, comment: 'sell or buy'
       t.decimal :volume, default: 0, precision: 32, scale: 16, comment: '量'
+      t.decimal :origin_volume, default: 0, precision: 32, scale: 16, comment: '初始量'
       t.decimal :price, default: 0, precision: 32, scale: 16, comment: '价格'
       t.decimal :ask_fee, default: 0, precision: 32, scale: 16, comment: '卖单手续费'
       t.decimal :bid_fee, default: 0, precision: 32, scale: 16, comment: '买单手续费'

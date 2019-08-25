@@ -70,6 +70,7 @@ ActiveRecord::Schema.define(version: 2019_08_24_142252) do
     t.string "order_type", null: false, comment: "订单类型 市价单market 限价单limit"
     t.string "side", null: false, comment: "sell or buy"
     t.decimal "volume", precision: 32, scale: 16, default: "0.0", comment: "量"
+    t.decimal "origin_volume", precision: 32, scale: 16, default: "0.0", comment: "初始量"
     t.decimal "price", precision: 32, scale: 16, default: "0.0", comment: "价格"
     t.decimal "ask_fee", precision: 32, scale: 16, default: "0.0", comment: "卖单手续费"
     t.decimal "bid_fee", precision: 32, scale: 16, default: "0.0", comment: "买单手续费"

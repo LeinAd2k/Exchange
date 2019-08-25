@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/FlowerWrong/exchange/actions/forms"
@@ -8,6 +9,7 @@ import (
 	"github.com/FlowerWrong/exchange/dtos"
 	"github.com/FlowerWrong/exchange/models"
 	"github.com/FlowerWrong/exchange/services"
+	"github.com/FlowerWrong/exchange/services/matching"
 	"github.com/FlowerWrong/exchange/utils"
 	"github.com/devfeel/mapper"
 	"github.com/gin-gonic/gin"
@@ -69,20 +71,45 @@ func OrderCreate(c *gin.Context) {
 	fund := &models.Fund{}
 	db.ORM().Where("symbol = ?", orderForm.Symbol).First(&fund)
 	order.FundID = fund.ID
+	order.OriginVolume = order.Volume
 
-	// TODO 避免重复提交订单 redis 计时
+	// 检验对手单够不够
+	if order.OrderType == "market" {
+		depthJSON, err := db.Redis().Get(db.DepthKey(order.Symbol)).Result()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		var depth matching.Depth
+		err = json.Unmarshal([]byte(depthJSON), &depth)
+		if err != nil {
+			panic(err)
+		}
+		if order.Side == "buy" {
+			if len(depth.Asks) == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": models.ErrWithoutEnoughOtherSideOrder.Error()})
+				return
+			}
+		} else {
+			if len(depth.Bids) == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": models.ErrWithoutEnoughOtherSideOrder.Error()})
+				return
+			}
+		}
 
-	// TODO 检验对手单够不够
+		order.Price = decimal.NewFromFloat(0)
+	}
 
 	// 校验钱够不够
-	if order.OrderType == "market" {
-		order.Price = models.CurrentPrice(order.Symbol) // 现价 TOOD 如果库里没有订单怎么办?
-	}
 	account := &models.Account{}
 	var locked decimal.Decimal
 	if order.Side == "buy" {
 		// BTC_USD 为例，购买动作即用USD买BTC，锁定账户的USD
-		locked = order.Volume.Mul(order.Price) // 单价 * 数量
+		if order.OrderType == "market" {
+			locked = order.Volume // USD
+		} else {
+			locked = order.Volume.Mul(order.Price) // 单价 * 数量
+		}
 		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.RightCurrencyID)
 		if account.Balance.Sub(locked).Sign() < 0 {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney.Error()})
@@ -109,9 +136,7 @@ func OrderCreate(c *gin.Context) {
 		return
 	}
 
-	// TODO use state machine
 	order.State = models.Wait
-
 	err = order.CreateOrder(account, locked)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

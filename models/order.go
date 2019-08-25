@@ -25,25 +25,19 @@ const (
 // Order ...
 type Order struct {
 	BaseModel
-	UserID    uint64          `json:"user_id"`
-	User      User            `json:"-"`
-	Symbol    string          `json:"symbol"`
-	FundID    uint64          `json:"fund_id"`
-	Fund      Fund            `json:"-"`
-	State     uint            `gorm:"default:0" json:"state"` // wait pending done cancel reject
-	OrderType string          `json:"order_type"`             // market or limit
-	Side      string          `json:"side"`                   // sell or buy
-	Volume    decimal.Decimal `json:"volume" sql:"DECIMAL(32,16)"`
-	Price     decimal.Decimal `json:"price" sql:"DECIMAL(32,16)"`
-	AskFee    decimal.Decimal `json:"ask_fee" sql:"DECIMAL(32,16)"`
-	BidFee    decimal.Decimal `json:"bid_fee" sql:"DECIMAL(32,16)"`
-}
-
-// CurrentPrice 返回最新成交价
-func CurrentPrice(symbol string) decimal.Decimal {
-	var order Order
-	db.ORM().Where("symbol = ?", symbol).Last(&order)
-	return order.Price
+	UserID       uint64          `json:"user_id"`
+	User         User            `json:"-"`
+	Symbol       string          `json:"symbol"`
+	FundID       uint64          `json:"fund_id"`
+	Fund         Fund            `json:"-"`
+	State        uint            `gorm:"default:0" json:"state"` // wait pending done cancel reject
+	OrderType    string          `json:"order_type"`             // market or limit
+	Side         string          `json:"side"`                   // sell or buy
+	Volume       decimal.Decimal `json:"volume" sql:"DECIMAL(32,16)"`
+	OriginVolume decimal.Decimal `json:"origin_volume" sql:"DECIMAL(32,16)"`
+	Price        decimal.Decimal `json:"price" sql:"DECIMAL(32,16)"`
+	AskFee       decimal.Decimal `json:"ask_fee" sql:"DECIMAL(32,16)"`
+	BidFee       decimal.Decimal `json:"bid_fee" sql:"DECIMAL(32,16)"`
 }
 
 // StrID return string id
@@ -172,6 +166,9 @@ func Transaction(order *Order, done []*matching.Order) error {
 		return err
 	}
 
+	fund := &Fund{}
+	tx.First(fund, order.FundID)
+
 	for _, matchingOrderDone := range done {
 		id := matchingOrderDone.IntID()
 		orderDone := &Order{}
@@ -193,7 +190,12 @@ func Transaction(order *Order, done []*matching.Order) error {
 		{
 			// 当前用户记录
 			orderUpdate := Order{}
-			orderUpdate.Volume = order.Volume.Sub(matchingOrderDone.Quantity())
+			if order.OrderType == "market" && order.Side == "buy" {
+				// eg: BTC_USD 市价买单存放的是USD总量
+				orderUpdate.Volume = order.Volume.Sub(matchingOrderDone.Quantity().Mul(matchingOrderDone.Price()))
+			} else {
+				orderUpdate.Volume = order.Volume.Sub(matchingOrderDone.Quantity())
+			}
 			if orderUpdate.Volume.Sign() == 0 {
 				orderUpdate.State = Done
 			}
@@ -207,7 +209,7 @@ func Transaction(order *Order, done []*matching.Order) error {
 			// 交易记录
 			trade := &Trade{}
 			trade.Symbol = order.Symbol
-			trade.FundID = order.FundID
+			trade.FundID = fund.ID
 			trade.Volume = matchingOrderDone.Quantity()
 			trade.Price = matchingOrderDone.Price()
 			if order.Side == "buy" {
@@ -227,17 +229,31 @@ func Transaction(order *Order, done []*matching.Order) error {
 			}
 
 			// 账户结算
-			err := Settlement(trade, tx)
+			err := Settlement(trade, fund, tx)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	if order.OrderType == "market" {
+	if order.OrderType == "market" && order.State != Done {
 		orderUpdate := Order{}
 		orderUpdate.State = Done
 		if err := tx.Model(order).Updates(orderUpdate).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		account := &Account{}
+		if order.Side == "buy" {
+			FindAccountByUserIDAndCurrencyID(tx, account, order.UserID, fund.RightCurrencyID)
+		} else {
+			FindAccountByUserIDAndCurrencyID(tx, account, order.UserID, fund.LeftCurrencyID)
+		}
+		accountUpdate := Account{}
+		accountUpdate.Locked = account.Locked.Sub(order.Volume)
+		accountUpdate.Balance = account.Balance.Add(order.Volume)
+		if err := tx.Model(&account).Updates(accountUpdate).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
