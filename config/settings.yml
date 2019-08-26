@@ -1,6 +1,7 @@
 db_url: "root:@/exchange_development?charset=utf8&parseTime=True&loc=Local"
 redis_url: "redis://:@localhost:6379/1"
 amqp_url: "amqp://guest:guest@localhost:5672/"
+pusher_url: "http://app-key:app-secret@127.0.0.1:8100/apps/123456789"
 
 api_url: ":8080"
 flake_url: ":8090"

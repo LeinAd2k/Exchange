@@ -2,10 +2,13 @@ package main
 
 import (
 	"flag"
-	"log"
+	"math/rand"
 	"net/http"
+	"runtime"
+	"time"
 
 	"github.com/FlowerWrong/exchange/config"
+	"github.com/FlowerWrong/exchange/log"
 	"github.com/gin-gonic/gin"
 	"github.com/sony/sonyflake"
 	"github.com/spf13/viper"
@@ -24,6 +27,9 @@ func init() {
 
 // curl 127.0.0.1:8090
 func main() {
+	rand.Seed(time.Now().UnixNano())
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	configFile := flag.String("config", "./config/settings.yml", "config file path")
 	flag.Parse()
 	err := config.Setup(*configFile)

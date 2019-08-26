@@ -1,10 +1,10 @@
 package models
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/FlowerWrong/exchange/db"
+	"github.com/FlowerWrong/exchange/log"
 	"github.com/FlowerWrong/exchange/services/matching"
 	"github.com/shopspring/decimal"
 )
@@ -165,6 +165,7 @@ func Transaction(order *Order, done []*matching.Order) error {
 	if err := tx.Error; err != nil {
 		return err
 	}
+	order.State = Pending
 
 	fund := &Fund{}
 	tx.First(fund, order.FundID)
@@ -189,19 +190,14 @@ func Transaction(order *Order, done []*matching.Order) error {
 
 		{
 			// 当前用户记录
-			orderUpdate := Order{}
 			if order.OrderType == "market" && order.Side == "buy" {
 				// eg: BTC_USD 市价买单存放的是USD总量
-				orderUpdate.Volume = order.Volume.Sub(matchingOrderDone.Quantity().Mul(matchingOrderDone.Price()))
+				order.Volume = order.Volume.Sub(matchingOrderDone.Quantity().Mul(matchingOrderDone.Price()))
 			} else {
-				orderUpdate.Volume = order.Volume.Sub(matchingOrderDone.Quantity())
+				order.Volume = order.Volume.Sub(matchingOrderDone.Quantity())
 			}
-			if orderUpdate.Volume.Sign() == 0 {
-				orderUpdate.State = Done
-			}
-			if err := tx.Model(order).Updates(orderUpdate).Error; err != nil {
-				tx.Rollback()
-				return err
+			if order.Volume.Sign() == 0 {
+				order.State = Done
 			}
 		}
 
@@ -237,12 +233,7 @@ func Transaction(order *Order, done []*matching.Order) error {
 	}
 
 	if order.OrderType == "market" && order.State != Done {
-		orderUpdate := Order{}
-		orderUpdate.State = Done
-		if err := tx.Model(order).Updates(orderUpdate).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
+		order.State = Done
 
 		account := &Account{}
 		if order.Side == "buy" {
@@ -257,6 +248,10 @@ func Transaction(order *Order, done []*matching.Order) error {
 			tx.Rollback()
 			return err
 		}
+	}
+	if err := tx.Save(order).Error; err != nil {
+		tx.Rollback()
+		return err
 	}
 
 	return tx.Commit().Error

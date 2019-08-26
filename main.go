@@ -2,12 +2,13 @@ package main
 
 import (
 	"flag"
-	"log"
 
 	"github.com/FlowerWrong/exchange/actions"
 	"github.com/FlowerWrong/exchange/config"
 	"github.com/FlowerWrong/exchange/db"
+	"github.com/FlowerWrong/exchange/log"
 	"github.com/FlowerWrong/exchange/middlewares"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"gopkg.in/resty.v1"
@@ -24,16 +25,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("Server launch in", config.AppEnv)
+	log.Infoln("Server launch in", config.AppEnv)
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(middlewares.Logger(log.Logger()))
+	router.Use(gin.Recovery())
 	router.Use(middlewares.RateLimit())
+
+	// static file
+	router.Use(static.Serve("/", static.LocalFile("./cmd/pusher/frontend", false)))
 
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
+
+	// pusher auth
+	router.POST("/pusher/auth", actions.PusherAuth)
+	router.POST("/pusher/webhook", actions.PusherWebhook)
 
 	v1 := router.Group("/api/v1")
 	{
