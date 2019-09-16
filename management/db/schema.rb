@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_24_142252) do
+ActiveRecord::Schema.define(version: 2019_09_16_144748) do
 
   create_table "accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "币种账户", force: :cascade do |t|
     t.bigint "user_id", null: false, comment: "用户"
@@ -60,6 +60,20 @@ ActiveRecord::Schema.define(version: 2019_08_24_142252) do
     t.index ["left_currency_id"], name: "index_funds_on_left_currency_id"
     t.index ["right_currency_id"], name: "index_funds_on_right_currency_id"
     t.index ["symbol"], name: "index_funds_on_symbol", unique: true
+  end
+
+  create_table "order_records", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "订单记录", force: :cascade do |t|
+    t.bigint "user_id", null: false, comment: "买方/卖方"
+    t.string "symbol", null: false, comment: "简称 eg BTC_USD"
+    t.bigint "fund_id", null: false, comment: "商品"
+    t.string "order_type", null: false, comment: "订单类型 市价单market 限价单limit"
+    t.string "side", null: false, comment: "sell or buy"
+    t.decimal "volume", precision: 32, scale: 16, default: "0.0", comment: "量"
+    t.decimal "price", precision: 32, scale: 16, default: "0.0", comment: "价格"
+    t.integer "state", default: 0, null: false, comment: "状态"
+    t.datetime "deleted_at", comment: "删除时间"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "orders", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci", comment: "订单", force: :cascade do |t|

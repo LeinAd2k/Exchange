@@ -1,0 +1,19 @@
+# frozen_string_literal: true
+
+class CreateOrderRecords < ActiveRecord::Migration[6.0]
+  def change
+    create_table :order_records, comment: '订单记录' do |t|
+      t.bigint :user_id, null: false, comment: '买方/卖方'
+      t.string :symbol, null: false, comment: '简称 eg BTC_USD'
+      t.bigint :fund_id, null: false, comment: '商品'
+      t.string :order_type, null: false, comment: '订单类型 市价单market 限价单limit'
+      t.string :side, null: false, comment: 'sell or buy'
+      t.decimal :volume, default: 0, precision: 32, scale: 16, comment: '量'
+      t.decimal :price, default: 0, precision: 32, scale: 16, comment: '价格'
+      t.integer :state, null: false, default: 0, comment: '状态'
+      t.datetime :deleted_at, comment: '删除时间'
+
+      t.timestamps
+    end
+  end
+end
