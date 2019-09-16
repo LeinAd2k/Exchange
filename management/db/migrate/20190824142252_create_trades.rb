@@ -11,8 +11,8 @@ class CreateTrades < ActiveRecord::Migration[6.0]
       t.bigint :fund_id, null: false, comment: '商品'
       t.decimal :volume, default: 0, precision: 32, scale: 16, comment: '量'
       t.decimal :price, default: 0, precision: 32, scale: 16, comment: '价格'
-      t.decimal :ask_fee, default: 0, precision: 32, scale: 16, comment: '卖单手续费'
-      t.decimal :bid_fee, default: 0, precision: 32, scale: 16, comment: '买单手续费'
+      t.decimal :taker_fee, default: 0, precision: 32, scale: 16, comment: 'taker手续费'
+      t.decimal :maker_fee, default: 0, precision: 32, scale: 16, comment: 'maker手续费'
       t.datetime :deleted_at, comment: '删除时间'
 
       t.timestamps

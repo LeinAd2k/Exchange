@@ -36,8 +36,8 @@ type Order struct {
 	Volume       decimal.Decimal `json:"volume" sql:"DECIMAL(32,16)"`
 	OriginVolume decimal.Decimal `json:"origin_volume" sql:"DECIMAL(32,16)"`
 	Price        decimal.Decimal `json:"price" sql:"DECIMAL(32,16)"`
-	AskFee       decimal.Decimal `json:"ask_fee" sql:"DECIMAL(32,16)"`
-	BidFee       decimal.Decimal `json:"bid_fee" sql:"DECIMAL(32,16)"`
+	TakerFee     decimal.Decimal `json:"taker_fee" sql:"DECIMAL(32,16)"`
+	MakerFee     decimal.Decimal `json:"maker_fee" sql:"DECIMAL(32,16)"`
 }
 
 // StrID return string id
