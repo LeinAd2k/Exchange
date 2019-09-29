@@ -35,6 +35,30 @@ module Management
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    config.generators do |g|
+      g.orm             :active_record
+      g.template_engine :erb
+      g.test_framework :rspec,
+                       fixtures: true,
+                       view_specs: false,
+                       helper_specs: false,
+                       routing_specs: false,
+                       controller_specs: false,
+                       request_specs: true
+      g.fixture_replacement :factory_girl, dir: 'spec/factories'
+      g.stylesheets     false
+      g.helper          false
+    end
+
+    config.i18n.available_locales = %i[zh-CN zh]
+    config.i18n.default_locale = :'zh-CN'
+
+    # FIXME
+    config.active_record.default_timezone = :local
+    config.time_zone = 'Asia/Shanghai'
+    config.encoding = 'utf-8'
+
     config.eager_load_paths << Rails.root.join('lib')
     config.autoload_paths << Rails.root.join('lib')
   end

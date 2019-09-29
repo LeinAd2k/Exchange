@@ -28,6 +28,10 @@ gem 'grape-entity'
 group :development, :test do
   gem 'byebug', platforms: %i[mri mingw x64_mingw]
 
+  # test gem
+  gem 'rspec-rails'
+
+  # development helper gem
   gem 'awesome_print'
   gem 'dotenv-rails'
 
