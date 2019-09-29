@@ -25,6 +25,7 @@ const (
 // Order ...
 type Order struct {
 	BaseModel
+	Action       string          `json:"action"` // create/update/cancel
 	UserID       uint64          `json:"user_id"`
 	User         User            `json:"-"`
 	Symbol       string          `json:"symbol"`

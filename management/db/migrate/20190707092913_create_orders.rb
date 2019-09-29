@@ -3,6 +3,7 @@
 class CreateOrders < ActiveRecord::Migration[6.0]
   def change
     create_table :orders, comment: '订单' do |t|
+      t.string :action, null: false, comment: 'ceate/update/cancel'
       t.bigint :user_id, null: false, comment: '买方/卖方'
       t.string :symbol, null: false, comment: '简称 eg BTC_USD'
       t.bigint :fund_id, null: false, comment: '商品'
