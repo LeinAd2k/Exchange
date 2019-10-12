@@ -10,9 +10,8 @@ type Account struct {
 	BaseModel
 	UserID     uint64          `json:"user_id"`
 	User       User            `json:"-"`
-	CurrencyID uint64          `json:"currency_id"`
+	CurrencyID string          `json:"currency_id"`
 	Currency   Currency        `json:"-"`
-	Symbol     string          `json:"symbol"`
 	Balance    decimal.Decimal `json:"balance" sql:"DECIMAL(32,16)"`
 	Locked     decimal.Decimal `json:"locked" sql:"DECIMAL(32,16)"`
 }
@@ -34,7 +33,7 @@ func (a *Account) Amount() decimal.Decimal {
 }
 
 // FindAccountByUserIDAndCurrencyID ...
-func FindAccountByUserIDAndCurrencyID(tx *gorm.DB, account *Account, userID, currencyID uint64) {
+func FindAccountByUserIDAndCurrencyID(tx *gorm.DB, account *Account, userID uint64, currencyID string) {
 	tx.Where("user_id = ? and currency_id = ?", userID, currencyID).First(account)
 }
 
@@ -46,7 +45,7 @@ func Settlement(trade *Trade, fund *Fund, tx *gorm.DB) error {
 		// 买方
 		// USD减少
 		bidAccountRight := &Account{}
-		FindAccountByUserIDAndCurrencyID(tx, bidAccountRight, trade.BidUserID, fund.RightCurrencyID)
+		FindAccountByUserIDAndCurrencyID(tx, bidAccountRight, trade.BidUserID, fund.Quote)
 		bidAccountRight.UnLock(locked)
 		if err := tx.Model(&bidAccountRight).Update("locked", bidAccountRight.Locked).Error; err != nil {
 			tx.Rollback()
@@ -55,7 +54,7 @@ func Settlement(trade *Trade, fund *Fund, tx *gorm.DB) error {
 
 		// BTC增加
 		bidAccountLeft := &Account{}
-		FindAccountByUserIDAndCurrencyID(tx, bidAccountLeft, trade.BidUserID, fund.LeftCurrencyID)
+		FindAccountByUserIDAndCurrencyID(tx, bidAccountLeft, trade.BidUserID, fund.Base)
 		bidAccountLeft.Balance = bidAccountLeft.Balance.Add(trade.Volume)
 		if err := tx.Model(&bidAccountLeft).Update("balance", bidAccountLeft.Balance).Error; err != nil {
 			tx.Rollback()
@@ -66,7 +65,7 @@ func Settlement(trade *Trade, fund *Fund, tx *gorm.DB) error {
 		// 卖方
 		// USD增加
 		askAccountRight := &Account{}
-		FindAccountByUserIDAndCurrencyID(tx, askAccountRight, trade.AskUserID, fund.RightCurrencyID)
+		FindAccountByUserIDAndCurrencyID(tx, askAccountRight, trade.AskUserID, fund.Quote)
 		askAccountRight.Balance = askAccountRight.Balance.Add(locked)
 		if err := tx.Model(&askAccountRight).Update("balance", askAccountRight.Balance).Error; err != nil {
 			tx.Rollback()
@@ -75,7 +74,7 @@ func Settlement(trade *Trade, fund *Fund, tx *gorm.DB) error {
 
 		// BTC减少
 		askAccountLeft := &Account{}
-		FindAccountByUserIDAndCurrencyID(tx, askAccountLeft, trade.AskUserID, fund.LeftCurrencyID)
+		FindAccountByUserIDAndCurrencyID(tx, askAccountLeft, trade.AskUserID, fund.Base)
 		askAccountLeft.UnLock(trade.Volume)
 		if err := tx.Model(&askAccountLeft).Update("locked", askAccountLeft.Locked).Error; err != nil {
 			tx.Rollback()

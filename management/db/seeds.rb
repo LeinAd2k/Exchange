@@ -2,18 +2,16 @@
 
 coins = %w[btc eth usd]
 
-currency_ids = {}
 coins.each do |c|
-  currency = Currency.create!(symbol: c)
-  currency_ids[c] = currency.id
+  Currency.create!(id: c)
 end
 
 %w[btc_usd eth_usd].each do |f|
   Fund.create!(
+    id: f,
     name: f,
-    symbol: f,
-    left_currency_id: currency_ids[f.split('_')[0]],
-    right_currency_id: currency_ids[f.split('_')[1]]
+    base: f.split('_')[0],
+    quote: f.split('_')[1]
   )
 end
 
@@ -41,7 +39,6 @@ Currency.all.each do |c|
   Account.create!(
     user_id: user1.id,
     currency_id: c.id,
-    symbol: c.symbol,
     balance: 100_000_000,
     locked: 0
   )
@@ -49,7 +46,6 @@ Currency.all.each do |c|
   Account.create!(
     user_id: user2.id,
     currency_id: c.id,
-    symbol: c.symbol,
     balance: 100_000_000,
     locked: 0
   )

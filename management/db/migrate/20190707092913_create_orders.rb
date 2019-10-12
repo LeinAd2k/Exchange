@@ -5,8 +5,7 @@ class CreateOrders < ActiveRecord::Migration[6.0]
     create_table :orders, comment: '订单' do |t|
       t.string :action, null: false, comment: 'ceate/update/cancel'
       t.bigint :user_id, null: false, comment: '买方/卖方'
-      t.string :symbol, null: false, comment: '简称 eg BTC_USD'
-      t.bigint :fund_id, null: false, comment: '商品'
+      t.string :fund_id, null: false, comment: '商品'
       t.integer :state, null: false, default: 0, comment: '状态'
       t.string :order_type, null: false, comment: '订单类型 市价单market 限价单limit'
       t.string :side, null: false, comment: 'sell or buy'

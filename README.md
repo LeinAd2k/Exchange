@@ -15,6 +15,7 @@
 * [ ] SMS and Google Two-Factor authenticaton
 * [ ] KYC Verification
 * [ ] High performance matching-engine
+* [ ] Bitmex like contact
 
 ## Libraries
 

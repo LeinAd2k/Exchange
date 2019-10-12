@@ -28,8 +28,7 @@ type Order struct {
 	Action       string          `json:"action"` // create/update/cancel
 	UserID       uint64          `json:"user_id"`
 	User         User            `json:"-"`
-	Symbol       string          `json:"symbol"`
-	FundID       uint64          `json:"fund_id"`
+	FundID       string          `json:"fund_id"`
 	Fund         Fund            `json:"-"`
 	State        uint            `gorm:"default:0" json:"state"` // wait pending done cancel reject
 	OrderType    string          `json:"order_type"`             // market or limit
@@ -51,7 +50,7 @@ func LoadOrdersToMatchingEngine(obm *matching.OrderBookManager) {
 	var orders []Order
 	db.ORM().Where("state = ?", Wait).Order("created_at asc").Find(&orders)
 	for _, order := range orders {
-		ob := obm.Get(order.Symbol)
+		ob := obm.Get(order.FundID)
 		side := matching.Str2Side(order.Side)
 		if order.OrderType == "limit" {
 			ob.ProcessLimitOrder(side, order.StrID(), order.Volume, order.Price)
@@ -63,13 +62,13 @@ func LoadOrdersToMatchingEngine(obm *matching.OrderBookManager) {
 	var funds []Fund
 	db.ORM().Find(&funds)
 	for _, fund := range funds {
-		ob := obm.Get(fund.Symbol)
-		err := ob.Backup(fund.Symbol)
+		ob := obm.Get(fund.ID)
+		err := ob.Backup(fund.ID)
 		if err != nil {
 			log.Println(err)
 		}
 
-		err = ob.BackupDepth(fund.Symbol)
+		err = ob.BackupDepth(fund.ID)
 		if err != nil {
 			log.Println(err)
 		}
@@ -132,17 +131,17 @@ func (o *Order) CancellingOrder() error {
 	}
 
 	fund := &Fund{}
-	tx.Where("symbol = ?", o.Symbol).First(&fund)
+	tx.First(&fund, "id = ?", o.FundID)
 
 	account := &Account{}
 	accountUpdate := Account{}
 	if o.Side == "buy" {
-		FindAccountByUserIDAndCurrencyID(tx, account, o.UserID, fund.RightCurrencyID)
+		FindAccountByUserIDAndCurrencyID(tx, account, o.UserID, fund.Quote)
 		locked := o.Volume.Mul(o.Price)
 		accountUpdate.Locked = account.Locked.Sub(locked)
 		accountUpdate.Balance = account.Balance.Add(locked)
 	} else {
-		FindAccountByUserIDAndCurrencyID(tx, account, o.UserID, fund.LeftCurrencyID)
+		FindAccountByUserIDAndCurrencyID(tx, account, o.UserID, fund.Base)
 		locked := o.Volume
 		accountUpdate.Locked = account.Locked.Sub(locked)
 		accountUpdate.Balance = account.Balance.Add(locked)
@@ -205,7 +204,6 @@ func Transaction(order *Order, done []*matching.Order) error {
 		{
 			// 交易记录
 			trade := &Trade{}
-			trade.Symbol = order.Symbol
 			trade.FundID = fund.ID
 			trade.Volume = matchingOrderDone.Quantity()
 			trade.Price = matchingOrderDone.Price()
@@ -238,9 +236,9 @@ func Transaction(order *Order, done []*matching.Order) error {
 
 		account := &Account{}
 		if order.Side == "buy" {
-			FindAccountByUserIDAndCurrencyID(tx, account, order.UserID, fund.RightCurrencyID)
+			FindAccountByUserIDAndCurrencyID(tx, account, order.UserID, fund.Quote)
 		} else {
-			FindAccountByUserIDAndCurrencyID(tx, account, order.UserID, fund.LeftCurrencyID)
+			FindAccountByUserIDAndCurrencyID(tx, account, order.UserID, fund.Base)
 		}
 		accountUpdate := Account{}
 		accountUpdate.Locked = account.Locked.Sub(order.Volume)

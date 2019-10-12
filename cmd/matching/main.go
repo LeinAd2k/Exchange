@@ -32,7 +32,7 @@ func main() {
 	var funds []models.Fund
 	db.ORM().Find(&funds)
 	for _, fund := range funds {
-		orderBookManager.Add(fund.Symbol)
+		orderBookManager.Add(fund.ID)
 	}
 
 	// reload db orders to matching engine when start
@@ -54,7 +54,7 @@ func main() {
 			continue
 		}
 
-		matchEngine := orderBookManager.Get(order.Symbol)
+		matchEngine := orderBookManager.Get(order.FundID)
 		log.Infoln(matchEngine)
 
 		switch event.Name {
@@ -105,12 +105,12 @@ func main() {
 		}
 
 		// backup order book depth to redis
-		err = matchEngine.Backup(order.Symbol)
+		err = matchEngine.Backup(order.FundID)
 		if err != nil {
 			log.Error(err)
 		}
 
-		err = matchEngine.BackupDepth(order.Symbol)
+		err = matchEngine.BackupDepth(order.FundID)
 		if err != nil {
 			log.Error(err)
 		}

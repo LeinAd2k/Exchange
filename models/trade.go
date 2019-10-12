@@ -12,8 +12,7 @@ type Trade struct {
 	BidUserID  uint64          `json:"bid_user_id"`
 	AskOrderID uint64          `json:"ask_order_id"`
 	BidOrderID uint64          `json:"bid_order_id"`
-	Symbol     string          `json:"symbol"`
-	FundID     uint64          `json:"fund_id"`
+	FundID     string          `json:"fund_id"`
 	Fund       Fund            `json:"-"`
 	Volume     decimal.Decimal `json:"volume" sql:"DECIMAL(32,16)"`
 	Price      decimal.Decimal `json:"price" sql:"DECIMAL(32,16)"`
@@ -24,7 +23,7 @@ type Trade struct {
 // CurrentPrice 返回最新成交价
 func CurrentPrice(symbol string) decimal.Decimal {
 	var trade Trade
-	err := db.ORM().Where("symbol = ?", symbol).Last(&trade).Error
+	err := db.ORM().Where("fund_id = ?", symbol).Last(&trade).Error
 	if err != nil {
 		return decimal.NewFromFloat(0)
 	}

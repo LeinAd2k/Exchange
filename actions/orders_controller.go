@@ -75,7 +75,7 @@ func OrderCreate(c *gin.Context) {
 
 	// 检验对手单够不够
 	if order.OrderType == "market" {
-		depthJSON, err := db.Redis().Get(db.DepthKey(order.Symbol)).Result()
+		depthJSON, err := db.Redis().Get(db.DepthKey(order.FundID)).Result()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -110,13 +110,13 @@ func OrderCreate(c *gin.Context) {
 		} else {
 			locked = order.Volume.Mul(order.Price) // 单价 * 数量
 		}
-		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.RightCurrencyID)
+		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.Quote)
 		if account.Balance.Sub(locked).Sign() < 0 {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney.Error()})
 			return
 		}
 	} else {
-		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.LeftCurrencyID)
+		models.FindAccountByUserIDAndCurrencyID(db.ORM(), account, order.UserID, fund.Base)
 		locked = order.Volume
 		if account.Balance.Sub(locked).Sign() < 0 {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": models.ErrWithoutEnoughMoney.Error()})
