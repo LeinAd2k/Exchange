@@ -1,8 +1,15 @@
 # guide
 
+## [资金费率](https://www.bitmex.com/app/contract/XBTUSD)
+
+```
+利率 = (计价利率 - 基础利率) / 每日资金费率交付时间
+资金费率 = 溢价率 + Clamp(利率 - 溢价率, -0.05%, 0.05%)
+```
+
 ## 指数价格
 
-## 标记价格
+## [标记价格](https://www.bitmex.com/app/fairPriceMarking)
 
 ```
 资金费用基差率 = 资金费率 * (至下一个缴付资金费用的时间 / 资金费用时间间隔)
