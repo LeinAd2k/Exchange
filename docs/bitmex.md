@@ -1,4 +1,4 @@
-# guide
+# bitmex guide
 
 ## [资金费率](https://www.bitmex.com/app/contract/XBTUSD)
 
