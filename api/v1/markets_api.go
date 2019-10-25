@@ -2,12 +2,14 @@ package v1
 
 import "github.com/gin-gonic/gin"
 
-// Depth ...
-func Depth(c *gin.Context) {
-
+// Indexes ...
+func Indexes(c *gin.Context) {
 }
 
-// Trade ...
-func Trade(c *gin.Context) {
+// FundingRate ...
+func FundingRate(c *gin.Context) {
+}
 
+// PNLs ...
+func PNLs(c *gin.Context) {
 }
