@@ -5,9 +5,9 @@
 * [go](https://golang.org/)
 * [ruby 2.6+](https://www.ruby-lang.org/en/)
 * [rails 6+](https://rubyonrails.org/)
-* [mysql 8+](https://www.mysql.com/cn/)
+* [mysql 5.7+](https://www.mysql.com/cn/)
 * [redis 5+](https://redis.io/)
-* [rabbitmq 3.7+](https://www.rabbitmq.com/)
+* [rabbitmq 3.8+](https://www.rabbitmq.com/)
 * [docker](https://www.docker.com/)
 
 ## Features
