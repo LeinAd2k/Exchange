@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"github.com/FlowerWrong/exchange/log"
+	"github.com/FlowerWrong/exchange/libs/huobi"
 )
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	huobi.Run()
 
 	log.Infoln("Fair price daemon started")
 

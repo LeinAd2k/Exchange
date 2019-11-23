@@ -5,10 +5,10 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-const BaseURL = "https://api.huobi.pro"
+const baseURL = "https://api.huobi.pro"
 
 func GetTrade(symbol string) (map[string]interface{}, error) {
-	resp, err := resty.R().Get(BaseURL + "/market/trade?symbol=" + symbol)
+	resp, err := resty.R().Get(baseURL + "/market/trade?symbol=" + symbol)
 	if err != nil {
 		return nil, err
 	}
