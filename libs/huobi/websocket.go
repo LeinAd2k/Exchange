@@ -3,6 +3,8 @@ package huobi
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -19,22 +21,41 @@ func Run() error {
 	}
 	defer c.Close()
 
-	err = c.WriteMessage(websocket.TextMessage, []byte("{\r\n  \"sub\": \"market.btcusdt.trade.detail\",\r\n  \"id\": \"id1\"\r\n}"))
+	sudData := []byte(`{
+		"sub": "market.btcusdt.trade.detail",
+		"id": "id1"
+	}`)
+	err = c.WriteMessage(websocket.TextMessage, sudData)
 	if err != nil {
 		log.Println("write:", err)
 		return err
 	}
 
 	for {
-		_, message, err := c.ReadMessage()
+		_, zipedMsg, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
 			break
 		}
-		rdata := bytes.NewReader(message)
-		r, _ := gzip.NewReader(rdata)
-		s, _ := ioutil.ReadAll(r)
-		log.Printf("recv: %s", string(s))
+		gzipR, _ := gzip.NewReader(bytes.NewReader(zipedMsg))
+		msg, _ := ioutil.ReadAll(gzipR)
+
+		var m map[string]interface{}
+		err = json.Unmarshal([]byte(msg), &m)
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		if m["ping"] != nil {
+			var pong map[string]interface{}
+			pong = make(map[string]interface{})
+			pong["pong"] = m["ping"]
+			pongData, _ := json.Marshal(pong)
+			log.Println(string(pongData))
+			c.WriteMessage(websocket.TextMessage, pongData)
+		} else {
+			fmt.Println(m)
+		}
 	}
 
 	return nil
