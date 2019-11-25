@@ -5,15 +5,16 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/FlowerWrong/exchange/libs/binance"
 	"github.com/FlowerWrong/exchange/log"
-	"github.com/FlowerWrong/exchange/libs/huobi"
 )
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	huobi.Run()
+	// huobi.Run()
+	binance.Run()
 
 	log.Infoln("Fair price daemon started")
 
