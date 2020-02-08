@@ -10,10 +10,18 @@ func CreateOrder(c *gin.Context) {
 func CancelOrder(c *gin.Context) {
 }
 
-// OrderIndex ...
-func OrderIndex(c *gin.Context) {
+// CancelAllOrder ...
+func CancelAllOrder(c *gin.Context) {
 }
 
 // OrderShow ...
 func OrderShow(c *gin.Context) {
+}
+
+// OrderIndex ...
+func OrderIndex(c *gin.Context) {
+}
+
+// OrderHistory ...
+func OrderHistory(c *gin.Context) {
 }
