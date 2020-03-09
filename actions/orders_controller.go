@@ -69,7 +69,7 @@ func OrderCreate(c *gin.Context) {
 	order.UserID = currentUser.ID
 
 	fund := &models.Fund{}
-	db.ORM().Where("symbol = ?", orderForm.Symbol).First(&fund)
+	db.ORM().Where("id = ?", orderForm.Symbol).First(&fund)
 	order.FundID = fund.ID
 	order.OriginVolume = order.Volume
 

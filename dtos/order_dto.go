@@ -9,8 +9,7 @@ import (
 type OrderDTO struct {
 	models.BaseModel
 	UserID    uint64          `json:"user_id"`
-	Symbol    string          `json:"symbol"`
-	FundID    uint64          `json:"fund_id"`
+	FundID    string          `json:"fund_id"`
 	State     uint            `json:"state"`
 	OrderType string          `json:"order_type"`
 	Side      string          `json:"side"`

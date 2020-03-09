@@ -62,19 +62,12 @@ func (ob *OrderBook) ProcessMarketOrder(side Side, quantity decimal.Decimal) (do
 	// 未成交完且对手单列表不为空
 	for quantity.Sign() > 0 && sideToProcess.Len() > 0 {
 		bestPrice := iter() // 最优价订单列表
-		if side == Buy {
-			ordersDone, partialDone, partialProcessed, quantityLeft := ob.processBuySideMarketOrderQueue(bestPrice, quantity)
-			done = append(done, ordersDone...)
-			partial = partialDone
-			partialQuantityProcessed = partialProcessed
-			quantity = quantityLeft
-		} else {
-			ordersDone, partialDone, partialProcessed, quantityLeft := ob.processQueue(bestPrice, quantity)
-			done = append(done, ordersDone...)
-			partial = partialDone
-			partialQuantityProcessed = partialProcessed
-			quantity = quantityLeft
-		}
+		ordersDone, partialDone, partialProcessed, quantityLeft := ob.processQueue(bestPrice, quantity)
+		done = append(done, ordersDone...)
+
+		partial = partialDone
+		partialQuantityProcessed = partialProcessed
+		quantity = quantityLeft
 	}
 
 	quantityLeft = quantity
@@ -113,7 +106,7 @@ func (ob *OrderBook) ProcessLimitOrder(side Side, orderID string, quantity, pric
 		return nil, nil, decimal.Zero, ErrInvalidPrice
 	}
 
-	quantityToTrade := quantity
+	quantityToTrade := quantity // 未成交量
 	var (
 		sideToProcess *OrderSide // 待撮合的委单列表
 		sideToAdd     *OrderSide // 如果撮合不成功就添加进的委单列表
@@ -160,7 +153,7 @@ func (ob *OrderBook) ProcessLimitOrder(side Side, orderID string, quantity, pric
 	return
 }
 
-// 按照最优价格处理订单
+// 按照最优价格处理订单: matching
 func (ob *OrderBook) processQueue(bestPriceOrderQueue *OrderQueue, quantityToTrade decimal.Decimal) (done []*Order, partial *Order, partialQuantityProcessed, quantityLeft decimal.Decimal) {
 	quantityLeft = quantityToTrade
 
@@ -180,37 +173,6 @@ func (ob *OrderBook) processQueue(bestPriceOrderQueue *OrderQueue, quantityToTra
 			quantityLeft = decimal.Zero // 未成交剩余单量
 		} else {
 			quantityLeft = quantityLeft.Sub(headOrder.Quantity())
-			done = append(done, ob.CancelOrder(headOrder.ID())) // 成交单列表
-		}
-	}
-
-	return
-}
-
-// 按照最优价格处理订单
-func (ob *OrderBook) processBuySideMarketOrderQueue(bestPriceOrderQueue *OrderQueue, quantityToTrade decimal.Decimal) (done []*Order, partial *Order, partialQuantityProcessed, quantityLeft decimal.Decimal) {
-	quantityLeft = quantityToTrade
-
-	// 最优价订单列表不为空且未成交完
-	for bestPriceOrderQueue.Len() > 0 && quantityLeft.Sign() > 0 {
-		// 同一价格 时间优先
-		headOrderEl := bestPriceOrderQueue.Head()
-		headOrder := headOrderEl.Value.(*Order)
-
-		total := headOrder.Quantity().Mul(headOrder.Price())
-
-		// 未成交量 < 委单量
-		if quantityLeft.LessThan(total) {
-			// 剩余委单
-			q := quantityLeft.Div(headOrder.Price())
-
-			partial = NewOrder(headOrder.ID(), headOrder.Side(), headOrder.Quantity().Sub(q), headOrder.Price(), headOrder.Time())
-			done = append(done, NewOrder(headOrder.ID(), headOrder.Side(), q, headOrder.Price(), headOrder.Time())) // 成交单列表
-			partialQuantityProcessed = q                                                                            // 已成交部分量
-			bestPriceOrderQueue.Update(headOrderEl, partial)
-			quantityLeft = decimal.Zero // 未成交剩余单量
-		} else {
-			quantityLeft = quantityLeft.Sub(total)
 			done = append(done, ob.CancelOrder(headOrder.ID())) // 成交单列表
 		}
 	}
@@ -314,40 +276,6 @@ func (ob *OrderBook) CalculateMarketPrice(side Side, quantity decimal.Decimal) (
 
 	if quantity.Sign() > 0 {
 		err = ErrInsufficientQuantity
-	}
-
-	return
-}
-
-// CalculateMarketPrices ...
-func (ob *OrderBook) CalculateMarketPrices(side Side, quantity decimal.Decimal) (prices []decimal.Decimal) {
-	var (
-		level *OrderQueue
-		iter  func(decimal.Decimal) *OrderQueue
-	)
-
-	if side == Buy {
-		level = ob.asks.MinPriceQueue()
-		iter = ob.asks.GreaterThan
-	} else {
-		level = ob.bids.MaxPriceQueue()
-		iter = ob.bids.LessThan
-	}
-
-	for quantity.Sign() > 0 && level != nil {
-		levelVolume := level.Volume()
-		levelPrice := level.Price()
-		levelTotal := levelVolume.Mul(levelPrice)
-
-		// 单量大于对手单
-		if quantity.GreaterThanOrEqual(levelTotal) {
-			prices = append(prices, levelPrice)
-			quantity = quantity.Sub(levelTotal)
-			level = iter(levelPrice)
-		} else {
-			prices = append(prices, levelPrice)
-			quantity = decimal.Zero
-		}
 	}
 
 	return

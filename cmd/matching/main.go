@@ -73,18 +73,14 @@ func main() {
 			if order.OrderType == "limit" {
 				done, partial, partialQty, err := matchEngine.ProcessLimitOrder(side, order.StrID(), order.Volume, order.Price)
 				if err != nil {
-					log.Panic(err)
+					log.Error(err)
 				}
 				log.Infoln(done, partial, partialQty)
 				models.Transaction(&order, done)
 			} else if order.OrderType == "market" {
-				if order.Side == "buy" {
-					prices := matchEngine.CalculateMarketPrices(side, order.Volume)
-					log.Infoln(prices)
-				}
 				done, partial, partialQty, left, err := matchEngine.ProcessMarketOrder(side, order.Volume)
 				if err != nil {
-					log.Panic(err)
+					log.Error(err)
 				}
 				log.Infoln(done, partial, partialQty, left)
 				models.Transaction(&order, done)
@@ -93,7 +89,7 @@ func main() {
 			if matchEngine.Order(order.StrID()) != nil {
 				err = order.CancellingOrder()
 				if err != nil {
-					log.Panic(err)
+					log.Error(err)
 				} else {
 					matchEngine.CancelOrder(order.StrID())
 				}
