@@ -168,7 +168,7 @@ func Transaction(order *Order, done []*matching.Order) error {
 	order.State = Pending
 
 	fund := &Fund{}
-	tx.First(fund, order.FundID)
+	tx.Where("id = ?", order.FundID).First(fund)
 
 	for _, matchingOrderDone := range done {
 		id := matchingOrderDone.IntID()
