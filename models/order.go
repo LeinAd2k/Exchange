@@ -25,7 +25,6 @@ const (
 // Order ...
 type Order struct {
 	BaseModel
-	Action       string          `json:"action"` // create/update/cancel
 	UserID       uint64          `json:"user_id"`
 	User         User            `json:"-"`
 	FundID       string          `json:"fund_id"`
@@ -131,7 +130,7 @@ func (o *Order) CancellingOrder() error {
 	}
 
 	fund := &Fund{}
-	tx.First(&fund, "id = ?", o.FundID)
+	tx.Where("id = ?", o.FundID).Take(fund)
 
 	account := &Account{}
 	accountUpdate := Account{}
@@ -168,7 +167,7 @@ func Transaction(order *Order, done []*matching.Order) error {
 	order.State = Pending
 
 	fund := &Fund{}
-	tx.Where("id = ?", order.FundID).First(fund)
+	tx.Where("id = ?", order.FundID).Take(fund)
 
 	for _, matchingOrderDone := range done {
 		id := matchingOrderDone.IntID()

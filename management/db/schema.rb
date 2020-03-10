@@ -55,14 +55,13 @@ ActiveRecord::Schema.define(version: 2019_10_25_053838) do
   end
 
   create_table "orders", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", comment: "订单", force: :cascade do |t|
-    t.string "action", limit: 16, null: false, comment: "ceate/update/cancel"
     t.bigint "user_id", null: false, comment: "买方/卖方"
     t.string "fund_id", null: false, comment: "商品"
     t.integer "state", limit: 1, default: 0, null: false, comment: "状态"
     t.string "order_type", limit: 16, null: false, comment: "订单类型 市价单market 限价单limit"
     t.string "side", limit: 8, null: false, comment: "sell or buy"
     t.decimal "volume", precision: 32, scale: 16, default: "0.0", comment: "量"
-    t.decimal "origin_volume", precision: 32, scale: 16, default: "0.0", comment: "初始量"
+    t.decimal "origin_volume", precision: 32, scale: 16, default: "0.0", comment: "原始量"
     t.decimal "price", precision: 32, scale: 16, default: "0.0", comment: "价格"
     t.decimal "taker_fee", precision: 32, scale: 16, default: "0.0", comment: "taker手续费"
     t.decimal "maker_fee", precision: 32, scale: 16, default: "0.0", comment: "maker手续费"
@@ -82,8 +81,8 @@ ActiveRecord::Schema.define(version: 2019_10_25_053838) do
     t.string "open_type", limit: 8, null: false, comment: "开仓方式 全仓cross 逐仓isolated"
     t.string "side", limit: 8, null: false, comment: "sell or buy"
     t.integer "state", limit: 1, default: 0, null: false, comment: "状态"
-    t.bigint "close_volume", default: 0, null: false, comment: "已平仓位"
     t.bigint "open_volume", null: false, comment: "开仓量"
+    t.bigint "close_volume", default: 0, null: false, comment: "已平仓位"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
