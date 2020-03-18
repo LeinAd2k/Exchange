@@ -30,29 +30,29 @@ module Daemons
         if @ready
           raise 'Missing data' if response['U'] != @counter_id
 
-          response['b'].each do |bid|
-            exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: bid[0]).last
+          response['b'].each do |ob|
+            exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
             if exist_ob
-              exist_ob.update!(amount: bid[1])
+              exist_ob.update!(amount: ob[1])
             else
               BinanceOrderBook.create!(
                 symbol: 'BTCUSDT',
                 side: 'Buy',
-                price: bid[0],
-                amount: bid[1]
+                price: ob[0],
+                amount: ob[1]
               )
             end
           end
-          response['a'].each do |bid|
-            exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: bid[0]).last
+          response['a'].each do |ob|
+            exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
             if exist_ob
-              exist_ob.update!(amount: bid[1])
+              exist_ob.update!(amount: ob[1])
             else
               BinanceOrderBook.create!(
                 symbol: 'BTCUSDT',
                 side: 'Sell',
-                price: bid[0],
-                amount: bid[1]
+                price: ob[0],
+                amount: ob[1]
               )
             end
           end
@@ -76,20 +76,20 @@ module Daemons
 
             puts 'Init order book'
             BinanceOrderBook.delete_all
-            @rest_order_book['bids'].each do |bid|
+            @rest_order_book['bids'].each do |ob|
               BinanceOrderBook.create!(
                 symbol: 'BTCUSDT',
                 side: 'Buy',
-                price: bid[0],
-                amount: bid[1]
+                price: ob[0],
+                amount: ob[1]
               )
             end
-            @rest_order_book['asks'].each do |bid|
+            @rest_order_book['asks'].each do |ob|
               BinanceOrderBook.create!(
                 symbol: 'BTCUSDT',
                 side: 'Sell',
-                price: bid[0],
-                amount: bid[1]
+                price: ob[0],
+                amount: ob[1]
               )
             end
 
@@ -100,29 +100,29 @@ module Daemons
                 raise 'Missing data'
               end
 
-              v['b'].each do |bid|
-                exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: bid[0]).last
+              v['b'].each do |ob|
+                exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
                 if exist_ob
-                  exist_ob.update!(amount: bid[1])
+                  exist_ob.update!(amount: ob[1])
                 else
                   BinanceOrderBook.create!(
                     symbol: 'BTCUSDT',
                     side: 'Buy',
-                    price: bid[0],
-                    amount: bid[1]
+                    price: ob[0],
+                    amount: ob[1]
                   )
                 end
               end
-              v['a'].each do |bid|
-                exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: bid[0]).last
+              v['a'].each do |ob|
+                exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
                 if exist_ob
-                  exist_ob.update!(amount: bid[1])
+                  exist_ob.update!(amount: ob[1])
                 else
                   BinanceOrderBook.create!(
                     symbol: 'BTCUSDT',
                     side: 'Sell',
-                    price: bid[0],
-                    amount: bid[1]
+                    price: ob[0],
+                    amount: ob[1]
                   )
                 end
               end

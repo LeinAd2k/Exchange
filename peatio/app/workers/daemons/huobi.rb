@@ -53,30 +53,30 @@ module Daemons
 
             # TODO: mq
             tobe_import = []
-            response['tick']['bids'].each do |bid|
-              exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: bid[0]).last
+            response['tick']['bids'].each do |ob|
+              exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
               if exist_ob
-                exist_ob.update!(amount: bid[1])
+                exist_ob.update!(amount: ob[1])
               else
                 tobe_import << {
                   symbol: 'BTCUSDT',
                   side: 'Buy',
-                  price: bid[0],
-                  amount: bid[1]
+                  price: ob[0],
+                  amount: ob[1]
                 }
               end
             end
 
-            response['tick']['asks'].each do |bid|
-              exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: bid[0]).last
+            response['tick']['asks'].each do |ob|
+              exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
               if exist_ob
-                exist_ob.update!(amount: bid[1])
+                exist_ob.update!(amount: ob[1])
               else
                 tobe_import << {
                   symbol: 'BTCUSDT',
                   side: 'Sell',
-                  price: bid[0],
-                  amount: bid[1]
+                  price: ob[0],
+                  amount: ob[1]
                 }
               end
             end
@@ -105,20 +105,20 @@ module Daemons
               puts 'Init order book'
               HuobiOrderBook.delete_all
               tobe_import = []
-              @rest_order_book['bids'].each do |bid|
+              @rest_order_book['bids'].each do |ob|
                 tobe_import << {
                   symbol: 'BTCUSDT',
                   side: 'Buy',
-                  price: bid[0],
-                  amount: bid[1]
+                  price: ob[0],
+                  amount: ob[1]
                 }
               end
-              @rest_order_book['asks'].each do |bid|
+              @rest_order_book['asks'].each do |ob|
                 tobe_import << {
                   symbol: 'BTCUSDT',
                   side: 'Sell',
-                  price: bid[0],
-                  amount: bid[1]
+                  price: ob[0],
+                  amount: ob[1]
                 }
               end
               HuobiOrderBook.import!(tobe_import)
@@ -130,29 +130,29 @@ module Daemons
                   raise 'Missing data'
                 end
 
-                v['bids'].each do |bid|
-                  exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: bid[0]).last
+                v['bids'].each do |ob|
+                  exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
                   if exist_ob
-                    exist_ob.update!(amount: bid[1])
+                    exist_ob.update!(amount: ob[1])
                   else
                     tobe_import << {
                       symbol: 'BTCUSDT',
                       side: 'Buy',
-                      price: bid[0],
-                      amount: bid[1]
+                      price: ob[0],
+                      amount: ob[1]
                     }
                   end
                 end
-                v['asks'].each do |bid|
-                  exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: bid[0]).last
+                v['asks'].each do |ob|
+                  exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
                   if exist_ob
-                    exist_ob.update!(amount: bid[1])
+                    exist_ob.update!(amount: ob[1])
                   else
                     tobe_import << {
                       symbol: 'BTCUSDT',
                       side: 'Sell',
-                      price: bid[0],
-                      amount: bid[1]
+                      price: ob[0],
+                      amount: ob[1]
                     }
                   end
                 end
