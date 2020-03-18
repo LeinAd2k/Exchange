@@ -14,11 +14,11 @@ module Daemons
 
     def run
       EventMachine.run do
-        begin
-          process
-        rescue StandardError => e
-          raise e if is_db_connection_error?(e)
-        end
+        process
+      rescue StandardError => e
+        @logger.error e.message
+        @logger.error e.backtrace.join("\n")
+        raise e if is_db_connection_error?(e)
       end
     end
 
