@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# https://www.okex.com/docs/zh/#spot_ws-full_depth
 module Daemons
   class Okex < Base
     def process

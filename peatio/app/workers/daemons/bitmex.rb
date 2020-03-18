@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# https://www.bitmex.com/app/wsAPI
 module Daemons
   class Bitmex < Base
     def process

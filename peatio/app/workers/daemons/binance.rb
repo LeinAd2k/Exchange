@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# https://binance-docs.github.io/apidocs/spot/cn/#1654ad2dd2
 module Daemons
   class Binance < Base
     attr_accessor :ready, :cache_order_book, :counter_id, :last_update_id, :rest_order_book

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# https://huobiapi.github.io/docs/spot/v1/cn/#mbp
 module Daemons
   class Huobi < Base
     attr_accessor :ready, :cache_order_book, :counter_id, :last_update_id, :rest_order_book
