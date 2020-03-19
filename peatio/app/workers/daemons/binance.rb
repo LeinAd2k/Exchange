@@ -66,7 +66,6 @@ module Daemons
           if @cache_order_book.size == 10
             @rest_order_book = fetch_order_book
             @last_update_id = @rest_order_book['lastUpdateId']
-            ap "lastUpdateId is #{@last_update_id}"
           elsif @cache_order_book.size == 50
             @cache_order_book.each do |k, _v|
               @cache_order_book.delete(k) if k <= @last_update_id

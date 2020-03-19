@@ -33,25 +33,29 @@ module Daemons
           when 'partial'
             BitmexOrderBook.delete_all
 
+            tobe_import = []
             response['data'].each do |ob|
-              BitmexOrderBook.create!(
+              tobe_import << {
                 id: ob['id'],
                 symbol: ob['symbol'],
                 side: ob['side'],
                 price: ob['price'],
                 amount: ob['size']
-              )
+              }
             end
+            BitmexOrderBook.import! tobe_import
           when 'insert'
+            tobe_import = []
             response['data'].each do |ob|
-              BitmexOrderBook.create!(
+              tobe_import << {
                 id: ob['id'],
                 symbol: ob['symbol'],
                 side: ob['side'],
                 price: ob['price'],
                 amount: ob['size']
-              )
+              }
             end
+            BitmexOrderBook.import! tobe_import
           when 'update'
             response['data'].each do |ob|
               BitmexOrderBook.find(ob['id']).update!(amount: ob['size'])

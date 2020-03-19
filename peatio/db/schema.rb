@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_18_143416) do
+ActiveRecord::Schema.define(version: 2020_03_19_032514) do
 
   create_table "binance_order_books", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "symbol"
@@ -37,6 +37,23 @@ ActiveRecord::Schema.define(version: 2020_03_18_143416) do
     t.index ["symbol", "side"], name: "index_bitmex_order_books_on_symbol_and_side"
   end
 
+  create_table "bitstamp_order_books", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "symbol"
+    t.string "side"
+    t.decimal "amount", precision: 32, scale: 16, null: false
+    t.decimal "price", precision: 32, scale: 16, null: false
+    t.index ["symbol", "amount"], name: "index_bitstamp_order_books_on_symbol_and_amount"
+    t.index ["symbol", "side", "price"], name: "index_bitstamp_order_books_on_symbol_and_side_and_price"
+  end
+
+  create_table "coinbase_order_books", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "symbol"
+    t.string "side"
+    t.decimal "amount", precision: 32, scale: 16, null: false
+    t.decimal "price", precision: 32, scale: 16, null: false
+    t.index ["symbol", "side", "price"], name: "index_coinbase_order_books_on_symbol_and_side_and_price"
+  end
+
   create_table "huobi_order_books", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "symbol"
     t.string "side"
@@ -44,6 +61,14 @@ ActiveRecord::Schema.define(version: 2020_03_18_143416) do
     t.decimal "price", precision: 32, scale: 16, null: false
     t.index ["symbol", "amount"], name: "index_huobi_order_books_on_symbol_and_amount"
     t.index ["symbol", "side", "price"], name: "index_huobi_order_books_on_symbol_and_side_and_price"
+  end
+
+  create_table "kraken_order_books", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "symbol"
+    t.string "side"
+    t.decimal "amount", precision: 32, scale: 16, null: false
+    t.decimal "price", precision: 32, scale: 16, null: false
+    t.index ["symbol", "side", "price"], name: "index_kraken_order_books_on_symbol_and_side_and_price"
   end
 
   create_table "okex_order_books", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
