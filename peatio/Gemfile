@@ -26,10 +26,13 @@ gem 'bootsnap', '>= 1.4.2', require: false
 # ws and http client
 gem 'faye-websocket'
 gem 'eventmachine'
+gem 'em-websocket'
 gem 'faraday'
 gem 'faraday_middleware'
 
 gem 'rbtree'
+# gem 'sql-parser', github: 'FlowerWrong/sql-parser'
+# gem 'http_parser.rb'
 
 gem 'method-not-implemented'
 
