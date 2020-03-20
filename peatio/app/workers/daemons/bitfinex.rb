@@ -3,8 +3,11 @@
 # https://docs.bitfinex.com/reference#ws-public-books
 module Daemons
   class Bitfinex < Base
+    ZERO_D = '0.00'.to_d
+
     def process
       url = 'wss://api-pub.bitfinex.com/ws/2'
+      symbol_name = 'bitfinex_XBTUSD'
 
       ws = Faye::WebSocket::Client.new(url, [], {
                                          proxy: {
@@ -13,8 +16,12 @@ module Daemons
                                          }
                                        })
 
+      order_book_db = OrderBookClient.new
+
       ws.on :open do |_event|
         p [:open]
+        order_book_db.drop(symbol_name)
+        order_book_db.create(symbol_name)
 
         sub_data = {
           event: 'subscribe',
@@ -38,38 +45,30 @@ module Daemons
           end
         elsif response.is_a?(Array)
           if response[1][0].is_a?(Array)
-            BitfinexOrderBook.delete_all
-
-            tobe_import = []
+            asks_data = []
+            bids_data = []
             response[1].each do |ob|
               next if ob[1].zero?
 
-              tobe_import << {
-                symbol: 'BTCUSDT',
-                side: (ob[2].positive? ? 'Buy' : 'Sell'),
-                price: ob[0],
-                amount: ob[2].abs
-              }
+              price = ob[0].to_d
+              amount = ob[2].to_d
+              amount.positive? ? bids_data << [price, amount.abs] : asks_data << [price, amount.abs]
             end
-            BitfinexOrderBook.import! tobe_import
+            order_book_db.update(symbol_name, bids_data, asks_data)
           else
             ob = response[1]
             if ob.is_a?(Array)
+              asks_data = []
+              bids_data = []
+              price = ob[0].to_d
+              amount = ob[2].to_d
+
               if ob[1].zero?
-                BitfinexOrderBook.where(symbol: 'BTCUSDT', side: (ob[2].positive? ? 'Buy' : 'Sell'), price: ob[0]).delete_all
+                amount.positive? ? bids_data << [price, ZERO_D] : asks_data << [price, ZERO_D]
               else
-                exist_ob = BitfinexOrderBook.where(symbol: 'BTCUSDT', side: (ob[2].positive? ? 'Buy' : 'Sell'), price: ob[0]).last
-                if exist_ob
-                  exist_ob.update!(amount: ob[2].abs)
-                else
-                  BitfinexOrderBook.create!(
-                    symbol: 'BTCUSDT',
-                    side: (ob[2].positive? ? 'Buy' : 'Sell'),
-                    price: ob[0],
-                    amount: ob[2].abs
-                  )
-                end
+                amount.positive? ? bids_data << [price, amount.abs] : asks_data << [price, amount.abs]
               end
+              order_book_db.update(symbol_name, bids_data, asks_data)
             else
               ap response
             end

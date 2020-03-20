@@ -6,6 +6,7 @@ module Daemons
   class Kraken < Base
     def process
       url = 'wss://ws.kraken.com'
+      symbol_name = 'kraken_XBTUSD'
 
       ws = Faye::WebSocket::Client.new(url, [], {
                                          proxy: {
@@ -14,8 +15,12 @@ module Daemons
                                          }
                                        })
 
+      order_book_db = OrderBookClient.new
+
       ws.on :open do |_event|
         p [:open]
+        order_book_db.drop(symbol_name)
+        order_book_db.create(symbol_name)
 
         sub_data = {
           event: 'subscribe',
@@ -41,77 +46,33 @@ module Daemons
           end
         elsif response.is_a?(Array)
           if response[1]['as'].present? && response[1]['bs'].present?
-            KrakenOrderBook.delete_all
-            tobe_import = []
+            asks_data = []
+            bids_data = []
             response[1]['as'].each do |ob|
-              tobe_import << {
-                symbol: 'XBTUSD',
-                side: 'Sell',
-                price: ob[0],
-                amount: ob[1]
-              }
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              asks_data << [price, amount]
             end
             response[1]['bs'].each do |ob|
-              tobe_import << {
-                symbol: 'XBTUSD',
-                side: 'Buy',
-                price: ob[0],
-                amount: ob[1]
-              }
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              bids_data << [price, amount]
             end
-            KrakenOrderBook.import! tobe_import
+            order_book_db.update(symbol_name, bids_data, asks_data)
           elsif response[1]['a'].present? || response[1]['b'].present?
-            tobe_import = []
+            asks_data = []
+            bids_data = []
             response[1]['a']&.each do |ob|
-              if ob[1].to_d.zero?
-                KrakenOrderBook.where(symbol: 'XBTUSD', side: 'Sell', price: ob[0]).delete_all
-              elsif ob.size == 4 && ob[3] == 'r'
-                tobe_import << {
-                  symbol: 'XBTUSD',
-                  side: 'Sell',
-                  price: ob[0],
-                  amount: ob[1]
-                }
-              else
-                exist_ob = KrakenOrderBook.where(symbol: 'XBTUSD', side: 'Sell', price: ob[0]).first
-                if exist_ob
-                  exist_ob.update!(amount: ob[1])
-                else
-                  tobe_import << {
-                    symbol: 'XBTUSD',
-                    side: 'Sell',
-                    price: ob[0],
-                    amount: ob[1]
-                  }
-                end
-              end
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              asks_data << [price, amount]
             end
             response[1]['b']&.each do |ob|
-              if ob[1].to_d.zero?
-                KrakenOrderBook.where(symbol: 'XBTUSD', side: 'Buy', price: ob[0]).delete_all
-              elsif ob.size == 4 && ob[3] == 'r'
-                tobe_import << {
-                  symbol: 'XBTUSD',
-                  side: 'Buy',
-                  price: ob[0],
-                  amount: ob[1]
-                }
-              else
-                exist_ob = KrakenOrderBook.where(symbol: 'XBTUSD', side: 'Buy', price: ob[0]).first
-                if exist_ob
-                  exist_ob.update!(amount: ob[1])
-                else
-                  tobe_import << {
-                    symbol: 'XBTUSD',
-                    side: 'Buy',
-                    price: ob[0],
-                    amount: ob[1]
-                  }
-                end
-              end
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              bids_data << [price, amount]
             end
-            KrakenOrderBook.import! tobe_import if tobe_import.present?
-            tobe_import = []
+            order_book_db.update(symbol_name, bids_data, asks_data)
           end
         end
       end

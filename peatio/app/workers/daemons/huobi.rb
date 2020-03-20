@@ -13,6 +13,7 @@ module Daemons
 
     def process
       url = 'wss://api.huobi.pro/ws'
+      symbol_name = 'huobi_BTCUSDT'
 
       order_book_req_id = 'req_id_btcusdt_150'
       order_book_sub_id = 'sub_id_btcusdt_150'
@@ -24,8 +25,12 @@ module Daemons
                                          }
                                        })
 
+      order_book_db = OrderBookClient.new
+
       ws.on :open do |_event|
         p [:open]
+        order_book_db.drop(symbol_name)
+        order_book_db.create(symbol_name)
 
         sub_data = {
           sub: 'market.btcusdt.mbp.150',
@@ -52,38 +57,20 @@ module Daemons
               raise 'Missing data'
             end
 
-            # TODO: mq
-            tobe_import = []
+            asks_data = []
+            bids_data = []
             response['tick']['bids'].each do |ob|
-              exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
-              if exist_ob
-                exist_ob.update!(amount: ob[1])
-              else
-                tobe_import << {
-                  symbol: 'BTCUSDT',
-                  side: 'Buy',
-                  price: ob[0],
-                  amount: ob[1]
-                }
-              end
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              bids_data << [price, amount]
             end
 
             response['tick']['asks'].each do |ob|
-              exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
-              if exist_ob
-                exist_ob.update!(amount: ob[1])
-              else
-                tobe_import << {
-                  symbol: 'BTCUSDT',
-                  side: 'Sell',
-                  price: ob[0],
-                  amount: ob[1]
-                }
-              end
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              asks_data << [price, amount]
             end
-            HuobiOrderBook.import!(tobe_import)
-
-            HuobiOrderBook.where(symbol: 'BTCUSDT', amount: '0.00'.to_d).delete_all
+            order_book_db.update(symbol_name, bids_data, asks_data)
 
             @counter_id = response['tick']['seqNum']
           else
@@ -104,63 +91,42 @@ module Daemons
               end
 
               puts 'Init order book'
-              HuobiOrderBook.delete_all
-              tobe_import = []
+              asks_data = []
+              bids_data = []
               @rest_order_book['bids'].each do |ob|
-                tobe_import << {
-                  symbol: 'BTCUSDT',
-                  side: 'Buy',
-                  price: ob[0],
-                  amount: ob[1]
-                }
+                price = ob[0].to_d
+                amount = ob[1].to_d
+                bids_data << [price, amount]
               end
               @rest_order_book['asks'].each do |ob|
-                tobe_import << {
-                  symbol: 'BTCUSDT',
-                  side: 'Sell',
-                  price: ob[0],
-                  amount: ob[1]
-                }
+                price = ob[0].to_d
+                amount = ob[1].to_d
+                asks_data << [price, amount]
               end
-              HuobiOrderBook.import!(tobe_import)
+              order_book_db.update(symbol_name, bids_data, asks_data)
 
               puts 'Apply order book cache'
-              tobe_import = []
+              asks_data = []
+              bids_data = []
               @cache_order_book.each do |k, v|
                 if @cache_order_book.keys.index(k) != 0 && v['prevSeqNum'] != @counter_id
                   raise 'Missing data'
                 end
 
                 v['bids'].each do |ob|
-                  exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
-                  if exist_ob
-                    exist_ob.update!(amount: ob[1])
-                  else
-                    tobe_import << {
-                      symbol: 'BTCUSDT',
-                      side: 'Buy',
-                      price: ob[0],
-                      amount: ob[1]
-                    }
-                  end
+                  price = ob[0].to_d
+                  amount = ob[1].to_d
+                  bids_data << [price, amount]
                 end
                 v['asks'].each do |ob|
-                  exist_ob = HuobiOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
-                  if exist_ob
-                    exist_ob.update!(amount: ob[1])
-                  else
-                    tobe_import << {
-                      symbol: 'BTCUSDT',
-                      side: 'Sell',
-                      price: ob[0],
-                      amount: ob[1]
-                    }
-                  end
+                  price = ob[0].to_d
+                  amount = ob[1].to_d
+                  asks_data << [price, amount]
                 end
 
                 @counter_id = k
               end
-              HuobiOrderBook.import!(tobe_import)
+              order_book_db.update(symbol_name, bids_data, asks_data)
 
               puts 'Order book applied'
 

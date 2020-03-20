@@ -5,11 +5,16 @@ module Daemons
   class Okex < Base
     def process
       url = 'wss://real.OKEx.com:8443/ws/v3'
+      symbol_name = 'okex_BTCUSDT'
 
       ws = Faye::WebSocket::Client.new(url, [])
 
+      order_book_db = OrderBookClient.new
+
       ws.on :open do |_event|
         p [:open]
+        order_book_db.drop(symbol_name)
+        order_book_db.create(symbol_name)
 
         sub_data = { op: 'subscribe', args: ['spot/depth_l2_tbt:BTC-USDT'] }
         ws.send(sub_data.to_json)
@@ -24,57 +29,33 @@ module Daemons
         elsif response['table'] == 'spot/depth_l2_tbt'
           case response['action']
           when 'partial'
-            OkexOrderBook.delete_all
-
-            tobe_import = []
+            asks_data = []
+            bids_data = []
             response['data'][0]['asks'].each do |ob|
-              tobe_import << {
-                symbol: 'BTCUSDT',
-                side: 'Sell',
-                price: ob[0],
-                amount: ob[1]
-              }
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              asks_data << [price, amount]
             end
             response['data'][0]['bids'].each do |ob|
-              tobe_import << {
-                symbol: 'BTCUSDT',
-                side: 'Buy',
-                price: ob[0],
-                amount: ob[1]
-              }
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              bids_data << [price, amount]
             end
-            OkexOrderBook.import! tobe_import
+            order_book_db.update(symbol_name, bids_data, asks_data)
           when 'update'
-            tobe_import = []
+            asks_data = []
+            bids_data = []
             response['data'][0]['asks'].each do |ob|
-              exist_ob = OkexOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
-              if exist_ob
-                exist_ob.update!(amount: ob[1])
-              else
-                tobe_import << {
-                  symbol: 'BTCUSDT',
-                  side: 'Sell',
-                  price: ob[0],
-                  amount: ob[1]
-                }
-              end
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              asks_data << [price, amount]
             end
             response['data'][0]['bids'].each do |ob|
-              exist_ob = OkexOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
-              if exist_ob
-                exist_ob.update!(amount: ob[1])
-              else
-                tobe_import << {
-                  symbol: 'BTCUSDT',
-                  side: 'Buy',
-                  price: ob[0],
-                  amount: ob[1]
-                }
-              end
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              bids_data << [price, amount]
             end
-            OkexOrderBook.import! tobe_import
-
-            OkexOrderBook.where(symbol: 'BTCUSDT', amount: '0.00'.to_d).delete_all
+            order_book_db.update(symbol_name, bids_data, asks_data)
           end
         else
           ap response

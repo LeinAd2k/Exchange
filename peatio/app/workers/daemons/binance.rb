@@ -13,6 +13,7 @@ module Daemons
 
     def process
       url = 'wss://stream.binance.com:9443/ws/btcusdt@depth@100ms'
+      symbol_name = 'binance_BTCUSDT'
 
       ws = Faye::WebSocket::Client.new(url, [], {
                                          proxy: {
@@ -21,8 +22,12 @@ module Daemons
                                          }
                                        })
 
+      order_book_db = OrderBookClient.new
+
       ws.on :open do |_event|
         p [:open]
+        order_book_db.drop(symbol_name)
+        order_book_db.create(symbol_name)
       end
 
       ws.on :message do |event|
@@ -31,34 +36,19 @@ module Daemons
         if @ready
           raise 'Missing data' if response['U'] != @counter_id
 
+          asks_data = []
+          bids_data = []
           response['b'].each do |ob|
-            exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
-            if exist_ob
-              exist_ob.update!(amount: ob[1])
-            else
-              BinanceOrderBook.create!(
-                symbol: 'BTCUSDT',
-                side: 'Buy',
-                price: ob[0],
-                amount: ob[1]
-              )
-            end
+            price = ob[0].to_d
+            amount = ob[1].to_d
+            bids_data << [price, amount]
           end
           response['a'].each do |ob|
-            exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
-            if exist_ob
-              exist_ob.update!(amount: ob[1])
-            else
-              BinanceOrderBook.create!(
-                symbol: 'BTCUSDT',
-                side: 'Sell',
-                price: ob[0],
-                amount: ob[1]
-              )
-            end
+            price = ob[0].to_d
+            amount = ob[1].to_d
+            asks_data << [price, amount]
           end
-
-          BinanceOrderBook.where(symbol: 'BTCUSDT', amount: '0.00'.to_d).delete_all
+          order_book_db.update(symbol_name, bids_data, asks_data)
 
           @counter_id = response['u'] + 1
         else
@@ -66,6 +56,7 @@ module Daemons
           if @cache_order_book.size == 10
             @rest_order_book = fetch_order_book
             @last_update_id = @rest_order_book['lastUpdateId']
+            puts "last_update_id is #{@last_update_id}"
           elsif @cache_order_book.size == 50
             @cache_order_book.each do |k, _v|
               @cache_order_book.delete(k) if k <= @last_update_id
@@ -75,60 +66,43 @@ module Daemons
             end
 
             puts 'Init order book'
-            BinanceOrderBook.delete_all
+            asks_data = []
+            bids_data = []
             @rest_order_book['bids'].each do |ob|
-              BinanceOrderBook.create!(
-                symbol: 'BTCUSDT',
-                side: 'Buy',
-                price: ob[0],
-                amount: ob[1]
-              )
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              bids_data << [price, amount]
             end
             @rest_order_book['asks'].each do |ob|
-              BinanceOrderBook.create!(
-                symbol: 'BTCUSDT',
-                side: 'Sell',
-                price: ob[0],
-                amount: ob[1]
-              )
+              price = ob[0].to_d
+              amount = ob[1].to_d
+              asks_data << [price, amount]
             end
+            order_book_db.update(symbol_name, bids_data, asks_data)
 
             puts 'Apply order book cache'
             @counter_id = @last_update_id + 1
+            asks_data = []
+            bids_data = []
             @cache_order_book.each do |k, v|
               if v['U'] != @counter_id && @cache_order_book.keys.index(k) != 0
                 raise 'Missing data'
               end
 
               v['b'].each do |ob|
-                exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Buy', price: ob[0]).last
-                if exist_ob
-                  exist_ob.update!(amount: ob[1])
-                else
-                  BinanceOrderBook.create!(
-                    symbol: 'BTCUSDT',
-                    side: 'Buy',
-                    price: ob[0],
-                    amount: ob[1]
-                  )
-                end
+                price = ob[0].to_d
+                amount = ob[1].to_d
+                bids_data << [price, amount]
               end
               v['a'].each do |ob|
-                exist_ob = BinanceOrderBook.where(symbol: 'BTCUSDT', side: 'Sell', price: ob[0]).last
-                if exist_ob
-                  exist_ob.update!(amount: ob[1])
-                else
-                  BinanceOrderBook.create!(
-                    symbol: 'BTCUSDT',
-                    side: 'Sell',
-                    price: ob[0],
-                    amount: ob[1]
-                  )
-                end
+                price = ob[0].to_d
+                amount = ob[1].to_d
+                asks_data << [price, amount]
               end
 
               @counter_id = k + 1
             end
+            order_book_db.update(symbol_name, bids_data, asks_data)
 
             puts 'Order book applied'
 
