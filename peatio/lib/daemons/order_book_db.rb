@@ -99,6 +99,9 @@ end
 $db_manager = OrderBookDBManager.new
 PORT = 6389
 EM.run do
+  Signal.trap('INT')  { EventMachine.stop }
+  Signal.trap('TERM') { EventMachine.stop }
+
   EM::WebSocket.run(host: '0.0.0.0', port: PORT) do |ws|
     ws.onopen do |_handshake|
       puts 'WebSocket connection open'
