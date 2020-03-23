@@ -1,19 +1,17 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Button } from "antd";
 
-import DepthChart from './components/Depth.jsx'
+import logo from "./logo.svg";
+import "./App.css";
 
-// Load Highcharts modules
-// require('highcharts/indicators/indicators')(Highcharts)
-// require('highcharts/indicators/pivot-points')(Highcharts)
-// require('highcharts/indicators/macd')(Highcharts)
+import DepthChart from "./components/Depth.jsx";
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
+        <Button type="primary">Button</Button>
         <DepthChart title={"Order Book Depth"} />
       </header>
     </div>

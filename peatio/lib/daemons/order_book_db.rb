@@ -26,6 +26,40 @@ class OrderBookDBManager
     @dbs[name]&.asks&.clear
     @dbs.delete(name)
   end
+
+  def get_depth(name, side)
+    db = find(name)
+    case side
+    when 'Sell'
+      db.asks.to_a
+    when 'Buy'
+      db.bids.to_a.reverse
+    end
+  end
+
+  def get_depth_with_precision(name, side, agg_precision)
+    round_option = side == 'Sell' ? BigDecimal::ROUND_UP : BigDecimal::ROUND_DOWN
+    precision = agg_precision.positive? ? agg_precision : 0
+    depth = Hash.new { |h, k| h[k] = 0 }
+    db = find(name)
+
+    db.send((side == 'Sell' ? 'asks' : 'bids').to_s).each do |price_level|
+      depth[price_with_precision(price_level[0], precision, round_option)] += price_level[1]
+    end
+
+    depth.delete_if { |_, value| value.zero? }
+    depth = depth.stringify_keys.to_a
+    depth.reverse! if side == 'Buy'
+    depth
+  end
+
+  private
+
+  def price_with_precision(price, precision, round_option)
+    result = price.round(precision, round_option)
+    result = result.truncate(precision).to_i unless precision.positive?
+    result.to_s
+  end
 end
 
 class OrderBookDB
@@ -45,11 +79,11 @@ class OrderBookDB
       when 'Sell'
         res[:asks] = @asks.to_a
       when 'Buy'
-        res[:bids] = @bids.to_a
+        res[:bids] = @bids.to_a.reverse
       end
     else
       res[:asks] = @asks.to_a
-      res[:bids] = @bids.to_a
+      res[:bids] = @bids.to_a.reverse
     end
     if limit.present?
       res[:asks] = res[:asks][0, limit] if res[:asks].present?
@@ -110,7 +144,7 @@ EM.run do
     ws.onclose { puts 'Connection closed' }
 
     ws.onmessage do |msg|
-      puts "Recieved message: #{msg}"
+      puts "Received message: #{msg}"
 
       data = JSON.parse(msg)
       db_name = data['payload']['name']
