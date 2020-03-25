@@ -96,12 +96,15 @@ class OrderBookDB
     payload['bids'].each do |ob|
       price = ob[0].to_d
       amount = ob[1].to_d
+      # bitmex 每张合约价值 1 USD 的比特币
+      puts "大额买单 #{price} #{amount}" if amount >= 5_000_000
       amount.zero? ? @bids.delete(price) : @bids[price] = amount
     end
 
     payload['asks'].each do |ob|
       price = ob[0].to_d
       amount = ob[1].to_d
+      puts "大额卖单 #{price} #{amount}" if amount >= 5_000_000
       amount.zero? ? @asks.delete(price) : @asks[price] = amount
     end
 
@@ -144,8 +147,6 @@ EM.run do
     ws.onclose { puts 'Connection closed' }
 
     ws.onmessage do |msg|
-      puts "Received message: #{msg}"
-
       data = JSON.parse(msg)
       db_name = data['payload']['name']
       case data['cmd']
