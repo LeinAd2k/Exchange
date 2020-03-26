@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
-module API
-  class Mount < Grape::API
-    PREFIX = '/api'
+class Mount < Grape::API
+  PREFIX = '/api'
 
-    cascade false
+  cascade false
 
-    mount API::V1::Mount => API::V1::Mount::API_VERSION
-  end
+  mount V1::Mount => V1::Mount::API_VERSION
 end
