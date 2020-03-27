@@ -7,11 +7,12 @@ coins.each do |c|
 end
 
 %w[btc_usd eth_usd].each do |f|
-  Market.create!(
+  Instrument.create!(
     id: f,
     name: f,
     base: f.split('_')[0],
-    quote: f.split('_')[1]
+    quote: f.split('_')[1],
+    settlement: f.split('_')[0]
   )
 end
 

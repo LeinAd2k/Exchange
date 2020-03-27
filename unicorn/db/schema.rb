@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_27_051346) do
+ActiveRecord::Schema.define(version: 2020_03_27_140111) do
 
   create_table "accounts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", comment: "币种账户", force: :cascade do |t|
     t.bigint "user_id", null: false, comment: "用户"
@@ -27,17 +27,18 @@ ActiveRecord::Schema.define(version: 2020_03_27_051346) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "markets", id: :string, limit: 32, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+  create_table "instruments", id: :string, limit: 32, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "name", limit: 64, null: false, comment: "名称"
     t.string "base", limit: 16, null: false, comment: "币种 eg BTC"
     t.string "quote", limit: 16, null: false, comment: "币种 eg USD"
+    t.string "settlement", limit: 16, null: false, comment: "盈亏结算和保证金币种 eg USD"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "orders", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", comment: "订单", force: :cascade do |t|
     t.bigint "user_id", null: false, comment: "买方/卖方"
-    t.string "market_id", null: false, comment: "商品"
+    t.string "instrument_id", null: false, comment: "商品"
     t.integer "state", limit: 1, default: 0, null: false, comment: "状态"
     t.string "order_type", limit: 16, null: false, comment: "订单类型 市价单market 限价单limit"
     t.string "side", limit: 8, null: false, comment: "sell or buy"
@@ -49,7 +50,7 @@ ActiveRecord::Schema.define(version: 2020_03_27_051346) do
   end
 
   create_table "positions", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", comment: "仓位", force: :cascade do |t|
-    t.string "market_id", limit: 32, null: false, comment: "产品"
+    t.string "instrument_id", limit: 32, null: false, comment: "产品"
     t.bigint "account_id", null: false, comment: "账户"
     t.decimal "open_average_price", precision: 32, scale: 16, default: "0.0", comment: "开仓均价"
     t.decimal "close_average_price", precision: 32, scale: 16, default: "0.0", comment: "平仓均价"
@@ -68,7 +69,7 @@ ActiveRecord::Schema.define(version: 2020_03_27_051346) do
     t.bigint "bid_user_id", null: false, comment: "买方"
     t.bigint "ask_order_id", null: false, comment: "卖单"
     t.bigint "bid_order_id", null: false, comment: "买单"
-    t.string "market_id", limit: 32, null: false, comment: "商品 eg BTC_USD"
+    t.string "instrument_id", limit: 32, null: false, comment: "商品 eg BTC_USD"
     t.decimal "volume", precision: 32, scale: 16, default: "0.0", comment: "量"
     t.decimal "price", precision: 32, scale: 16, default: "0.0", comment: "价格"
     t.datetime "created_at", precision: 6, null: false

@@ -3,7 +3,7 @@
 class CreatePositions < ActiveRecord::Migration[6.0]
   def change
     create_table :positions, comment: '仓位' do |t|
-      t.string :market_id, limit: 32, null: false, comment: '产品'
+      t.string :instrument_id, limit: 32, null: false, comment: '产品'
       t.bigint :account_id, null: false, comment: '账户'
       t.decimal :open_average_price, default: 0, precision: 32, scale: 16, comment: '开仓均价'
       t.decimal :close_average_price, default: 0, precision: 32, scale: 16, comment: '平仓均价'

@@ -22,5 +22,6 @@ module V1
     mount Sessions
 
     mount Orders
+    mount Instruments
   end
 end

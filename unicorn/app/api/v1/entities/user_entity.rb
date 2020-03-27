@@ -2,7 +2,7 @@
 
 module V1
   module Entities
-    class UserEntity < Grape::Entity
+    class UserEntity < BaseEntity
     end
   end
 end

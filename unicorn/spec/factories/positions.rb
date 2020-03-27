@@ -2,6 +2,6 @@
 
 FactoryBot.define do
   factory :position do
-    market_id { 'MyString' }
+    instrument_id { 'MyString' }
   end
 end

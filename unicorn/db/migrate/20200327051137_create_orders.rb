@@ -4,7 +4,7 @@ class CreateOrders < ActiveRecord::Migration[6.0]
   def change
     create_table :orders, comment: '订单' do |t|
       t.bigint :user_id, null: false, comment: '买方/卖方'
-      t.string :market_id, null: false, comment: '商品'
+      t.string :instrument_id, null: false, comment: '商品'
       t.integer :state, null: false, default: 0, limit: 1, comment: '状态'
       t.string :order_type, limit: 16, null: false, comment: '订单类型 市价单market 限价单limit'
       t.string :side, limit: 8, null: false, comment: 'sell or buy'
