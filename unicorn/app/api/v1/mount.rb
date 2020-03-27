@@ -16,6 +16,11 @@ module V1
         include: [GrapeLogging::Loggers::Response.new,
                   GrapeLogging::Loggers::FilterParameters.new]
 
+    helpers ::Helpers::AuthHelper
+
     mount Tools
+    mount Sessions
+
+    mount Orders
   end
 end

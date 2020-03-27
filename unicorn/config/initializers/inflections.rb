@@ -18,4 +18,5 @@ ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.acronym 'MQ'
   inflect.acronym 'CORS'
   inflect.acronym 'AMQP'
+  inflect.acronym 'JWT'
 end

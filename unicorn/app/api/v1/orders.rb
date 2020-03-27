@@ -2,10 +2,15 @@
 
 module V1
   class Orders < Grape::API
+    before do
+      authenticate!
+    end
+
     desc 'Get user open orders'
     params do
     end
     get '/open-orders' do
+      present []
     end
 
     desc 'Create a new order'
