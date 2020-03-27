@@ -38,5 +38,22 @@ module Unicorn
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    config.generators do |g|
+      g.orm             :active_record
+      g.template_engine :erb
+      g.test_framework  :rspec,
+                        fixtures: true,
+                        view_specs: false,
+                        helper_specs: false,
+                        routing_specs: false,
+                        controller_specs: false,
+                        request_specs: true
+      g.stylesheets     false
+      g.helper          false
+    end
+
+    config.i18n.available_locales = %i[zh-CN zh]
+    config.i18n.default_locale = :'zh-CN'
   end
 end
