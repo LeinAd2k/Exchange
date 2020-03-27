@@ -15,6 +15,8 @@ module V1
 
     desc 'Create a new order'
     params do
+      requires :symbol, allow_blank: false, type: String, desc: 'Instrument symbol name'
+      requires :order_type, allow_blank: false, type: String, desc: 'Order type'
     end
     post '/orders' do
     end
