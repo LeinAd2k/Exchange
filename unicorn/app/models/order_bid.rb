@@ -1,20 +1,6 @@
 # frozen_string_literal: true
 
-class Order < ApplicationRecord
-  ORDER_SIDES = %w[sell buy].freeze
-  ORDER_TYPES = %w[market limit stop_market stop_limit market_if_touched limit_if_touched].freeze
-  PLAN_ORDER_TYPES = %w[stop_limit stop_market].freeze
-
-  belongs_to :user
-
-  PENDING = 'pending'
-  WAIT    = 'wait'
-  DONE    = 'done'
-  CANCEL  = 'cancel'
-  REJECT  = 'reject'
-
-  scope :done, -> { with_state(:done) }
-  scope :active, -> { with_state(:wait) }
+class OrderBid < Order
 end
 
 # == Schema Information
