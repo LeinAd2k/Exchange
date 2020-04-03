@@ -34,7 +34,9 @@ module Daemons
         response = JSON.parse(event.data)
 
         if @ready
-          raise 'Missing data' if response['U'] != @counter_id
+          if response['U'] != @counter_id
+            raise 'Missing data response[U] != @counter_id'
+          end
 
           asks_data = []
           bids_data = []
@@ -56,13 +58,12 @@ module Daemons
           if @cache_order_book.size == 10
             @rest_order_book = fetch_order_book
             @last_update_id = @rest_order_book['lastUpdateId']
-            puts "last_update_id is #{@last_update_id}"
-          elsif @cache_order_book.size == 50
+          elsif @cache_order_book.size == 100
             @cache_order_book.each do |k, _v|
               @cache_order_book.delete(k) if k <= @last_update_id
             end
             if @cache_order_book.keys.empty? || @cache_order_book.keys.first < @last_update_id
-              raise 'Missing data'
+              raise "Missing data #{@cache_order_book.keys.empty?} || #{@cache_order_book.keys.first < @last_update_id}"
             end
 
             puts 'Init order book'
@@ -86,7 +87,7 @@ module Daemons
             bids_data = []
             @cache_order_book.each do |k, v|
               if v['U'] != @counter_id && @cache_order_book.keys.index(k) != 0
-                raise 'Missing data'
+                raise 'Missing data @cache_order_book.keys.index(k) != 0'
               end
 
               v['b'].each do |ob|
@@ -121,7 +122,7 @@ module Daemons
     def fetch_order_book
       order_book_path = '/api/v3/depth'
       ob_resp = conn.get(order_book_path) do |req|
-        req.params = { symbol: 'BTCUSDT', limit: 1000 }
+        req.params = { symbol: 'BTCUSDT', limit: 5000 }
       end
       ob_resp.body
     end

@@ -24,7 +24,7 @@ class OrderBook {
 
   bids() {
     return this._bids
-      .slice(0, 500)
+      .slice(0, 1000)
       .reverse()
       .map(function(pl) {
         return [pl.price, pl.size];
@@ -32,12 +32,9 @@ class OrderBook {
   }
 
   asks() {
-    return this._asks
-      .sorted()
-      .slice(0, 500)
-      .map(function(pl) {
-        return [pl.price, pl.size];
-      });
+    return this._asks.slice(0, 1000).map(function(pl) {
+      return [pl.price, pl.size];
+    });
   }
 }
 
