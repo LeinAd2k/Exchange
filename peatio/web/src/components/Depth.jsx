@@ -12,6 +12,7 @@ import Highcharts from "highcharts";
 const market = new Market();
 
 function DepthChart(props) {
+  const instrument = props.instrument;
   const [socketUrl] = useState("ws://127.0.0.1:6389");
   const [sendMessage, lastMessage, readyState] = useWebSocket(socketUrl);
   const [chartOptions, setChartOptions] = useState({
@@ -111,15 +112,24 @@ function DepthChart(props) {
   const subData = {
     cmd: "sub",
     payload: {
-      name: "bitmex_XBTUSD"
+      name: instrument
     }
   };
-  const handleClickSendMessage = useCallback(
+  const unsubData = {
+    cmd: "unsub",
+    payload: {
+      name: instrument
+    }
+  };
+  const handleSubClickSendMessage = useCallback(
     () => sendMessage(JSON.stringify(subData)),
     [sendMessage, subData]
   );
+  const handleUnsubClickSendMessage = useCallback(
+    () => sendMessage(JSON.stringify(unsubData)),
+    [sendMessage, unsubData]
+  );
 
-  const instrument = "bitmex_XBTUSD";
   let updateCounter = 0;
   market.open(instrument);
   market.onupdate = function(event) {
@@ -209,16 +219,24 @@ function DepthChart(props) {
         });
       }
     }
-  }, [lastMessage]);
+  }, [lastMessage, instrument]);
 
   return (
     <div>
       <Button
         type="primary"
-        onClick={handleClickSendMessage}
+        onClick={handleSubClickSendMessage}
         disabled={readyState !== ReadyState.OPEN}
       >
         Click Me to subscribe {props.title}
+      </Button>
+      <Button
+        type="primary"
+        danger
+        onClick={handleUnsubClickSendMessage}
+        disabled={readyState !== ReadyState.OPEN}
+      >
+        Click Me to unsubscribe {props.title}
       </Button>
       <HighchartsReact
         highcharts={Highcharts}

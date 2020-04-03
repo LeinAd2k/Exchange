@@ -15,9 +15,11 @@ function App() {
       </Row>
       <Row>
         <Col span={12}>
-          <DepthChart title="Bitmex XBT" />
+          <DepthChart title="Bitmex XBTUSD" instrument="bitmex_XBTUSD" />
         </Col>
-        <Col span={12}>col-12</Col>
+        <Col span={12}>
+          <DepthChart title="Binance BTCUSDT" instrument="binance_BTCUSDT" />
+        </Col>
       </Row>
     </div>
   );

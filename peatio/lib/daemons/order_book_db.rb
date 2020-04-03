@@ -96,15 +96,16 @@ class OrderBookDB
     payload['bids'].each do |ob|
       price = ob[0].to_d
       amount = ob[1].to_d
-      # bitmex 每张合约价值 1 USD 的比特币
-      puts "大额买单 #{price} #{amount}" if amount >= 5_000_000
+
+      monitor(price, amount, :bid)
       amount.zero? ? @bids.delete(price) : @bids[price] = amount
     end
 
     payload['asks'].each do |ob|
       price = ob[0].to_d
       amount = ob[1].to_d
-      puts "大额卖单 #{price} #{amount}" if amount >= 5_000_000
+
+      monitor(price, amount, :ask)
       amount.zero? ? @asks.delete(price) : @asks[price] = amount
     end
 
@@ -130,6 +131,16 @@ class OrderBookDB
     puts "#{conn} unsubscribed #{@name}"
 
     @pubsub.delete(conn)
+  end
+
+  def monitor(price, amount, side = :bid)
+    title = "#{@name}大额#{side == :bid ? '买' : '卖'}单 #{price} #{amount}"
+    case @name
+    when 'binance_BTCUSDT'
+      puts title if amount >= 500
+    when 'bitmex_XBTUSD'
+      puts title if amount >= 5_000_000
+    end
   end
 end
 

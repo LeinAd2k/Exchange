@@ -59,7 +59,11 @@ function update(book, side, price, size) {
       levels.delete(new PriceLevel(price));
     }
   } else {
-    levels.add(new PriceLevel(price, size));
+    if (size > 0) {
+      levels.add(new PriceLevel(price, size));
+    } else {
+      // console.log("delete", price, "without node");
+    }
   }
 }
 
