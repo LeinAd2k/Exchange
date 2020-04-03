@@ -4,6 +4,7 @@ import { Row, Col } from "antd";
 import "./App.css";
 
 import DepthChart from "./components/Depth.jsx";
+import KlineChart from "./components/Kline.jsx";
 
 function App() {
   return (
@@ -19,6 +20,11 @@ function App() {
         </Col>
         <Col span={12}>
           <DepthChart title="Binance BTCUSDT" instrument="binance_BTCUSDT" />
+        </Col>
+      </Row>
+      <Row>
+        <Col span={24}>
+          <KlineChart />
         </Col>
       </Row>
     </div>

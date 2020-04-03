@@ -88,6 +88,8 @@ GEM
     http_parser.rb (0.6.0)
     i18n (1.8.2)
       concurrent-ruby (~> 1.0)
+    jbuilder (2.10.0)
+      activesupport (>= 5.0.0)
     listen (3.2.1)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
@@ -121,6 +123,8 @@ GEM
     puma (4.3.3)
       nio4r (~> 2.0)
     rack (2.2.2)
+    rack-cors (1.1.1)
+      rack (>= 2.0.0)
     rack-test (1.1.0)
       rack (>= 1.0, < 3)
     rails (6.0.2.2)
@@ -188,12 +192,14 @@ DEPENDENCIES
   faraday
   faraday_middleware
   faye-websocket
+  jbuilder
   listen
   method-not-implemented
   mysql2 (>= 0.5)
   pry-byebug
   pry-rails
   puma (~> 4.3)
+  rack-cors
   rails (~> 6.0.2, >= 6.0.2.2)
   rbtree
   spring

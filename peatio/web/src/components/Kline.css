@@ -1,0 +1,13 @@
+.kline-chart-container {
+  display: flex;
+  flex: 1 1;
+  position: relative;
+  height: 100%;
+  min-height: 800px;
+  background: #2e3038;
+}
+
+.kline-chart {
+  height: 100%;
+  width: 100%;
+}
