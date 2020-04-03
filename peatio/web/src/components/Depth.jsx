@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
+import { Button } from "antd";
+
 import { Decimal } from "decimal.js";
 import Market from "../book/Market";
 
@@ -26,7 +28,7 @@ function DepthChart(props) {
       plotLines: [
         {
           color: "#888",
-          value: 0.1523,
+          value: 1,
           width: 1,
           label: {
             text: "市价",
@@ -125,11 +127,29 @@ function DepthChart(props) {
       console.log("Init render bids", event.bids.length);
       console.log("Init render asks", event.asks.length);
     }
-    if (event.initFlag || updateCounter > 5) {
+    if (event.initFlag || updateCounter > 7) {
       const bids = event.bids;
       const asks = event.asks;
 
       setChartOptions({
+        xAxis: {
+          minPadding: 0,
+          maxPadding: 0,
+          plotLines: [
+            {
+              color: "#888",
+              value: asks[0][0],
+              width: 1,
+              label: {
+                text: "市价",
+                rotation: 90
+              }
+            }
+          ],
+          title: {
+            text: "价格"
+          }
+        },
         series: [
           {
             name: "Bids",
@@ -190,22 +210,16 @@ function DepthChart(props) {
       }
     }
   }, [lastMessage]);
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: "Connecting",
-    [ReadyState.OPEN]: "Open",
-    [ReadyState.CLOSING]: "Closing",
-    [ReadyState.CLOSED]: "Closed"
-  }[readyState];
 
   return (
     <div>
-      <span>The WebSocket is currently {connectionStatus}</span>
-      <button
+      <Button
+        type="primary"
         onClick={handleClickSendMessage}
         disabled={readyState !== ReadyState.OPEN}
       >
-        Click Me to subscribe data
-      </button>
+        Click Me to subscribe {props.title}
+      </Button>
       <HighchartsReact
         highcharts={Highcharts}
         constructorType={"chart"}

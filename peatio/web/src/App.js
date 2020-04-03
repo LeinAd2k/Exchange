@@ -1,18 +1,24 @@
 import React from "react";
+import { Row, Col } from "antd";
 
-import logo from "./logo.svg";
 import "./App.css";
 
-// import DepthChart from "./components/Depth.jsx";
-import OrderBookUI from "./components/OrderBookUI.jsx";
+import DepthChart from "./components/Depth.jsx";
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <OrderBookUI title={"Order Book Depth"} />
-      </header>
+      <Row>
+        <Col span={24}>
+          <header className="App-header"></header>
+        </Col>
+      </Row>
+      <Row>
+        <Col span={12}>
+          <DepthChart title="Bitmex XBT" />
+        </Col>
+        <Col span={12}>col-12</Col>
+      </Row>
     </div>
   );
 }

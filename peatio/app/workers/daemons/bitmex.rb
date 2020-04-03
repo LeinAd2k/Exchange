@@ -8,6 +8,10 @@ module Daemons
     ZERO_D = '0.00'.to_d
 
     def initialize
+      init
+    end
+
+    def init
       @price_ids = {}
     end
 
@@ -109,6 +113,10 @@ module Daemons
       ws.on :close do |event|
         p [:close, event.code, event.reason]
         ws = nil
+
+        order_book_db.conn.close(1000, 'Close for clean')
+        init
+        process
       end
     end
   end
