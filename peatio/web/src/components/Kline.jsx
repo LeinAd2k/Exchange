@@ -2,7 +2,7 @@ import React from "react";
 
 import { Decimal } from "decimal.js";
 
-import { init, _, dispose } from "klinecharts";
+import { init, version, dispose } from "klinecharts";
 
 import "./Kline.css";
 
@@ -11,11 +11,12 @@ class KlineChart extends React.PureComponent {
     super(props);
     this.chart = null;
     this.state = {
-      isLoading: false
+      isLoading: false,
     };
   }
 
   componentDidMount() {
+    console.log("kline chart", version());
     this.chart = init("k_chart");
     const options = {
       grid: {
@@ -25,22 +26,22 @@ class KlineChart extends React.PureComponent {
           size: 1,
           color: "#393939",
           style: "dash",
-          dashValue: [2, 2]
+          dashValue: [2, 2],
         },
         vertical: {
           display: false,
           size: 1,
           color: "#393939",
           style: "dash",
-          dashValue: [2, 2]
-        }
+          dashValue: [2, 2],
+        },
       },
       candleStick: {
         bar: {
           style: "solid",
           upColor: "#26A69A",
           downColor: "#EF5350",
-          noChangeColor: "#666666"
+          noChangeColor: "#666666",
         },
         priceMark: {
           display: true,
@@ -48,7 +49,7 @@ class KlineChart extends React.PureComponent {
             display: true,
             color: "#D9D9D9",
             textMargin: 5,
-            textSize: 10
+            textSize: 10,
           },
           low: { display: true, color: "#D9D9D9", textMargin: 5, textSize: 10 },
           last: {
@@ -64,29 +65,29 @@ class KlineChart extends React.PureComponent {
               paddingTop: 2,
               paddingRight: 2,
               paddingBottom: 2,
-              color: "#FFFFFF"
-            }
-          }
-        }
+              color: "#FFFFFF",
+            },
+          },
+        },
       },
       realTime: {
         timeLine: {
           color: "#1e88e5",
           size: 1,
-          areaFillColor: "rgba(30, 136, 229, 0.08)"
+          areaFillColor: "rgba(30, 136, 229, 0.08)",
         },
-        averageLine: { display: true, color: "#F5A623", size: 1 }
+        averageLine: { display: true, color: "#F5A623", size: 1 },
       },
       technicalIndicator: {
         bar: {
           upColor: "#26A69A",
           downColor: "#EF5350",
-          noChangeColor: "#666666"
+          noChangeColor: "#666666",
         },
         line: {
           size: 1,
-          colors: ["#D9D9D9", "#F5A623", "#F601FF", "#1587DD", "#1e88e5"]
-        }
+          colors: ["#D9D9D9", "#F5A623", "#F601FF", "#1587DD", "#1e88e5"],
+        },
       },
       xAxis: {
         display: true,
@@ -94,7 +95,7 @@ class KlineChart extends React.PureComponent {
         minHeight: 30,
         axisLine: { display: true, color: "#888888", size: 1 },
         tickText: { display: true, color: "#D9D9D9", size: 12, margin: 3 },
-        tickLine: { display: true, size: 1, length: 3, color: "#888888" }
+        tickLine: { display: true, size: 1, length: 3, color: "#888888" },
       },
       yAxis: {
         display: true,
@@ -108,9 +109,9 @@ class KlineChart extends React.PureComponent {
           display: true,
           color: "#D9D9D9",
           size: 12,
-          margin: 3
+          margin: 3,
         },
-        tickLine: { display: true, size: 1, length: 3, color: "#888888" }
+        tickLine: { display: true, size: 1, length: 3, color: "#888888" },
       },
       separator: { size: 1, color: "#888888", fill: true },
       floatLayer: {
@@ -123,7 +124,7 @@ class KlineChart extends React.PureComponent {
               style: "dash",
               dashValue: [4, 2],
               size: 1,
-              color: "#888888"
+              color: "#888888",
             },
             text: {
               display: true,
@@ -135,8 +136,8 @@ class KlineChart extends React.PureComponent {
               paddingBottom: 2,
               borderSize: 1,
               borderColor: "#505050",
-              backgroundColor: "#505050"
-            }
+              backgroundColor: "#505050",
+            },
           },
           vertical: {
             display: true,
@@ -145,7 +146,7 @@ class KlineChart extends React.PureComponent {
               style: "dash",
               dashValue: [4, 2],
               size: 1,
-              color: "#888888"
+              color: "#888888",
             },
             text: {
               display: true,
@@ -157,9 +158,9 @@ class KlineChart extends React.PureComponent {
               paddingBottom: 2,
               borderSize: 1,
               borderColor: "#505050",
-              backgroundColor: "#505050"
-            }
-          }
+              backgroundColor: "#505050",
+            },
+          },
         },
         prompt: {
           displayRule: "always",
@@ -178,7 +179,7 @@ class KlineChart extends React.PureComponent {
               borderRadius: 4,
               borderSize: 1,
               borderColor: "#3f4254",
-              fillColor: "rgba(17, 17, 17, .3)"
+              fillColor: "rgba(17, 17, 17, .3)",
             },
             text: {
               size: 12,
@@ -186,8 +187,8 @@ class KlineChart extends React.PureComponent {
               marginLeft: 8,
               marginTop: 6,
               marginRight: 8,
-              marginBottom: 0
-            }
+              marginBottom: 0,
+            },
           },
           technicalIndicator: {
             text: {
@@ -196,11 +197,11 @@ class KlineChart extends React.PureComponent {
               marginTop: 6,
               marginRight: 8,
               marginBottom: 0,
-              marginLeft: 8
+              marginLeft: 8,
             },
-            point: { display: true, radius: 3 }
-          }
-        }
+            point: { display: true, radius: 3 },
+          },
+        },
       },
       graphicMark: {
         line: { color: "#1e88e5", size: 1 },
@@ -212,7 +213,7 @@ class KlineChart extends React.PureComponent {
           activeBackgroundColor: "#1e88e5",
           activeBorderColor: "#1e88e5",
           activeBorderSize: 1,
-          activeRadius: 6
+          activeRadius: 6,
         },
         text: {
           color: "#1e88e5",
@@ -220,43 +221,78 @@ class KlineChart extends React.PureComponent {
           marginLeft: 2,
           marginRight: 2,
           marginTop: 2,
-          marginBottom: 6
-        }
-      }
+          marginBottom: 6,
+        },
+      },
     };
     this.chart.setStyleOptions(options);
     this.chart.setCandleStickChartType("candle_stick");
     this.chart.setCandleStickTechnicalIndicatorType("MA");
-    // this.chart.addTechnicalIndicator("VOL");
+    this.chart.addTechnicalIndicator("VOL");
     this.chart.addTechnicalIndicator();
     var that = this;
 
     // 添加新数据, more是告诉图表还有没有更多历史数据
-    fetch("http://127.0.0.1:3000/k/binance").then(function(response) {
-      return response.json();
-    })
-    .then(function(myJson) {
-      const dataList = [];
-      myJson.forEach(function(element) {
-        const kLineModel = {
-          open: new Decimal(element[1]).toNumber(),
-          low: new Decimal(element[3]).toNumber(),
-          high: new Decimal(element[2]).toNumber(),
-          close: new Decimal(element[4]).toNumber(),
-          volume: new Decimal(element[5]).toNumber(),
-          timestamp: element[0],
-          turnover: new Decimal(element[7]).toNumber()
-        };
-        dataList.push(kLineModel);
+    fetch(
+      "http://127.0.0.1:3000/k/binance?symbol=BTCUSDT&interval=" +
+        this.props.interval +
+        "&limit=1000"
+    )
+      .then((res) => res.json())
+      .catch((error) => console.error("Error:", error))
+      .then(function (myJson) {
+        if (Array.isArray(myJson)) {
+          const dataList = [];
+          myJson.forEach(function (element) {
+            const kLineModel = {
+              open: new Decimal(element[1]).toNumber(),
+              low: new Decimal(element[3]).toNumber(),
+              high: new Decimal(element[2]).toNumber(),
+              close: new Decimal(element[4]).toNumber(),
+              volume: new Decimal(element[5]).toNumber(),
+              timestamp: element[0],
+              turnover: new Decimal(element[7]).toNumber(),
+            };
+            dataList.push(kLineModel);
+          });
+          that.chart.applyNewData(dataList, true);
+        }
       });
-      that.chart.applyNewData(dataList, true);
-    });
 
     // 设置加载更多回调函数
     this.chart.loadMore(() => {
       this.setState({ isLoading: true });
-      // TODO
+      const firstData = this.chart.getDataList()[0];
+      const that = this;
+
+      fetch(
+        "http://127.0.0.1:3000/k/binance?symbol=BTCUSDT&interval=" +
+          this.props.interval +
+          "&limit=1000&end_time=" +
+          (firstData.timestamp - 60000)
+      )
+        .then((res) => res.json())
+        .catch((error) => console.error("Error:", error))
+        .then(function (myJson) {
+          if (Array.isArray(myJson)) {
+            const dataList = [];
+            myJson.forEach(function (element) {
+              const kLineModel = {
+                open: new Decimal(element[1]).toNumber(),
+                low: new Decimal(element[3]).toNumber(),
+                high: new Decimal(element[2]).toNumber(),
+                close: new Decimal(element[4]).toNumber(),
+                volume: new Decimal(element[5]).toNumber(),
+                timestamp: element[0],
+                turnover: new Decimal(element[7]).toNumber(),
+              };
+              dataList.push(kLineModel);
+            });
+            that.chart.applyMoreData(dataList, true);
+          }
+        });
     });
+
     this.addData();
   }
 
@@ -269,38 +305,34 @@ class KlineChart extends React.PureComponent {
       const dataList = this.chart.getDataList();
       const lastData = dataList[dataList.length - 1];
       const newData = { ...lastData };
-      const nowTimestamp =
-        Math.floor(new Date().getTime() / 60 / 1000) * 60 * 1000;
-      if (
-        new Date(nowTimestamp).getMinutes() >
-        new Date(newData.timestamp).getMinutes()
-      ) {
-        newData.high = newData.close;
-        newData.low = newData.close;
-        newData.open = newData.close;
-        newData.volume = 0;
-        newData.turnover = 0;
-        this.count = 1;
-      } else {
-        const price = (Math.random() - 0.5) * 10 + newData.close;
-        const volume = +(Math.random() * 3).toFixed(0);
-        if (this.count === 1) {
-          newData.open = price;
-          newData.high = price;
-          newData.low = price;
-        }
-        newData.close = price;
-        newData.high = Math.max(newData.high, price);
-        newData.low = Math.min(newData.low, price);
-        newData.volume = newData.volume + volume;
-        newData.turnover = newData.turnover + volume * price;
-        this.count++;
-      }
-      newData.timestamp = nowTimestamp;
-      // 更新数据
-      this.chart.updateData(newData);
+      const that = this;
+
+      fetch(
+        "http://127.0.0.1:3000/k/binance?symbol=BTCUSDT&interval=" +
+          this.props.interval +
+          "&limit=1000&start_time=" +
+          newData.timestamp
+      )
+        .then((res) => res.json())
+        .catch((error) => console.error("Error:", error))
+        .then(function (myJson) {
+          if (Array.isArray(myJson)) {
+            myJson.forEach(function (element) {
+              const kLineModel = {
+                open: new Decimal(element[1]).toNumber(),
+                low: new Decimal(element[3]).toNumber(),
+                high: new Decimal(element[2]).toNumber(),
+                close: new Decimal(element[4]).toNumber(),
+                volume: new Decimal(element[5]).toNumber(),
+                timestamp: element[0],
+                turnover: new Decimal(element[7]).toNumber(),
+              };
+              that.chart.updateData(kLineModel);
+            });
+          }
+        });
       this.addData();
-    }, 1000);
+    }, 15000);
   }
 
   render() {

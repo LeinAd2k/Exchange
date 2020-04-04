@@ -24,7 +24,7 @@ function App() {
       </Row>
       <Row>
         <Col span={24}>
-          <KlineChart />
+          <KlineChart interval="1d" />
         </Col>
       </Row>
     </div>

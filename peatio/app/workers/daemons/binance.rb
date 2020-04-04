@@ -6,9 +6,16 @@ module Daemons
     attr_accessor :ready, :cache_order_book, :counter_id, :last_update_id, :rest_order_book
 
     def initialize
+      init
+      super
+    end
+
+    def init
       @ready = false
       @cache_order_book = {}
-      super
+      @last_update_id = nil
+      @counter_id = nil
+      @rest_order_book = {}
     end
 
     def process
@@ -116,6 +123,10 @@ module Daemons
       ws.on :close do |event|
         p [:close, event.code, event.reason]
         ws = nil
+
+        order_book_db.conn.close(1000, 'Close for clean')
+        init
+        process
       end
     end
 
