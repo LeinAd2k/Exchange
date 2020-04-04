@@ -24,9 +24,14 @@ function App() {
       </Row>
       <Row>
         <Col span={24}>
-          <KlineChart interval="1d" />
+          <KlineChart exchange="bitfinex" symbol="tBTCUSD" interval="1D" />
         </Col>
       </Row>
+      {/* <Row>
+        <Col span={24}>
+          <KlineChart exchange="binance" symbol="BTCUSDT" interval="1d" />
+        </Col>
+      </Row> */}
     </div>
   );
 }

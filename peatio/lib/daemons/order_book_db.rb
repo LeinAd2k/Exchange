@@ -24,6 +24,10 @@ class OrderBookDBManager
 
     @dbs[name]&.bids&.clear
     @dbs[name]&.asks&.clear
+    @dbs[name]&.pubsub&.each do |conn, _|
+      conn.close(1000, 'Please reconnect it')
+    end
+    @dbs[name]&.pubsub&.clear
     @dbs.delete(name)
   end
 

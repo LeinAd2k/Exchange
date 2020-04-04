@@ -13,6 +13,14 @@ class KlineChart extends React.PureComponent {
     this.state = {
       isLoading: false,
     };
+    this.baseURL =
+      "http://127.0.0.1:9292/k/" +
+      this.props.exchange +
+      "?symbol=" +
+      this.props.symbol +
+      "&interval=" +
+      this.props.interval +
+      "&limit=1000";
   }
 
   componentDidMount() {
@@ -233,25 +241,21 @@ class KlineChart extends React.PureComponent {
     var that = this;
 
     // 添加新数据, more是告诉图表还有没有更多历史数据
-    fetch(
-      "http://127.0.0.1:3000/k/binance?symbol=BTCUSDT&interval=" +
-        this.props.interval +
-        "&limit=1000"
-    )
+    fetch(this.baseURL)
       .then((res) => res.json())
       .catch((error) => console.error("Error:", error))
       .then(function (myJson) {
         if (Array.isArray(myJson)) {
           const dataList = [];
           myJson.forEach(function (element) {
+            // timestamp, open, close, high, low, volume
             const kLineModel = {
-              open: new Decimal(element[1]).toNumber(),
-              low: new Decimal(element[3]).toNumber(),
-              high: new Decimal(element[2]).toNumber(),
-              close: new Decimal(element[4]).toNumber(),
-              volume: new Decimal(element[5]).toNumber(),
               timestamp: element[0],
-              turnover: new Decimal(element[7]).toNumber(),
+              open: new Decimal(element[1]).toNumber(),
+              close: new Decimal(element[2]).toNumber(),
+              high: new Decimal(element[3]).toNumber(),
+              low: new Decimal(element[4]).toNumber(),
+              volume: new Decimal(element[5]).toNumber(),
             };
             dataList.push(kLineModel);
           });
@@ -265,12 +269,7 @@ class KlineChart extends React.PureComponent {
       const firstData = this.chart.getDataList()[0];
       const that = this;
 
-      fetch(
-        "http://127.0.0.1:3000/k/binance?symbol=BTCUSDT&interval=" +
-          this.props.interval +
-          "&limit=1000&end_time=" +
-          (firstData.timestamp - 60000)
-      )
+      fetch(this.baseURL + "&end_time=" + (firstData.timestamp - 60000))
         .then((res) => res.json())
         .catch((error) => console.error("Error:", error))
         .then(function (myJson) {
@@ -278,13 +277,12 @@ class KlineChart extends React.PureComponent {
             const dataList = [];
             myJson.forEach(function (element) {
               const kLineModel = {
-                open: new Decimal(element[1]).toNumber(),
-                low: new Decimal(element[3]).toNumber(),
-                high: new Decimal(element[2]).toNumber(),
-                close: new Decimal(element[4]).toNumber(),
-                volume: new Decimal(element[5]).toNumber(),
                 timestamp: element[0],
-                turnover: new Decimal(element[7]).toNumber(),
+                open: new Decimal(element[1]).toNumber(),
+                close: new Decimal(element[2]).toNumber(),
+                high: new Decimal(element[3]).toNumber(),
+                low: new Decimal(element[4]).toNumber(),
+                volume: new Decimal(element[5]).toNumber(),
               };
               dataList.push(kLineModel);
             });
@@ -307,25 +305,19 @@ class KlineChart extends React.PureComponent {
       const newData = { ...lastData };
       const that = this;
 
-      fetch(
-        "http://127.0.0.1:3000/k/binance?symbol=BTCUSDT&interval=" +
-          this.props.interval +
-          "&limit=1000&start_time=" +
-          newData.timestamp
-      )
+      fetch(this.baseURL + "&start_time=" + newData.timestamp)
         .then((res) => res.json())
         .catch((error) => console.error("Error:", error))
         .then(function (myJson) {
           if (Array.isArray(myJson)) {
             myJson.forEach(function (element) {
               const kLineModel = {
-                open: new Decimal(element[1]).toNumber(),
-                low: new Decimal(element[3]).toNumber(),
-                high: new Decimal(element[2]).toNumber(),
-                close: new Decimal(element[4]).toNumber(),
-                volume: new Decimal(element[5]).toNumber(),
                 timestamp: element[0],
-                turnover: new Decimal(element[7]).toNumber(),
+                open: new Decimal(element[1]).toNumber(),
+                close: new Decimal(element[2]).toNumber(),
+                high: new Decimal(element[3]).toNumber(),
+                low: new Decimal(element[4]).toNumber(),
+                volume: new Decimal(element[5]).toNumber(),
               };
               that.chart.updateData(kLineModel);
             });

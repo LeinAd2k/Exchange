@@ -20,8 +20,6 @@ gem 'puma', '~> 4.3'
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.4.6', require: false
 
-gem 'jbuilder'
-
 gem 'rack-cors'
 
 # ws and http client
