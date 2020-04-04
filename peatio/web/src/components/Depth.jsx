@@ -9,7 +9,7 @@ import Market from "../book/Market";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 
-const market = new Market();
+const market = new Market(500);
 
 function DepthChart(props) {
   const instrument = props.instrument;
@@ -18,10 +18,10 @@ function DepthChart(props) {
   const [chartOptions, setChartOptions] = useState({
     chart: {
       type: "area",
-      zoomType: "xy"
+      zoomType: "xy",
     },
     title: {
-      text: props.title
+      text: props.title,
     },
     xAxis: {
       minPadding: 0,
@@ -33,13 +33,13 @@ function DepthChart(props) {
           width: 1,
           label: {
             text: "市价",
-            rotation: 90
-          }
-        }
+            rotation: 90,
+          },
+        },
       ],
       title: {
-        text: "价格"
-      }
+        text: "价格",
+      },
     },
     yAxis: [
       {
@@ -51,8 +51,8 @@ function DepthChart(props) {
         tickPosition: "inside",
         labels: {
           align: "left",
-          x: 8
-        }
+          x: 8,
+        },
       },
       {
         opposite: true,
@@ -65,24 +65,24 @@ function DepthChart(props) {
         tickPosition: "inside",
         labels: {
           align: "right",
-          x: -8
-        }
-      }
+          x: -8,
+        },
+      },
     ],
     legend: {
-      enabled: false
+      enabled: false,
     },
     plotOptions: {
       area: {
         fillOpacity: 0.2,
         lineWidth: 1,
-        step: "center"
-      }
+        step: "center",
+      },
     },
     tooltip: {
       headerFormat:
         '<span style="color:{series.color}">\u25CF</span> Price: <b>{point.key}</b><br/>',
-      pointFormatter: function() {
+      pointFormatter: function () {
         return (
           '<span style="color: ' +
           this.series.color +
@@ -93,33 +93,33 @@ function DepthChart(props) {
           "</b><br/>."
         );
       },
-      valueDecimals: 2
+      valueDecimals: 2,
     },
     series: [
       {
         name: "Bids",
         data: [],
-        color: "#03a7a8"
+        color: "#03a7a8",
       },
       {
         name: "Asks",
         data: [],
-        color: "#fc5857"
-      }
-    ]
+        color: "#fc5857",
+      },
+    ],
   });
 
   const subData = {
     cmd: "sub",
     payload: {
-      name: instrument
-    }
+      name: instrument,
+    },
   };
   const unsubData = {
     cmd: "unsub",
     payload: {
-      name: instrument
-    }
+      name: instrument,
+    },
   };
   const handleSubClickSendMessage = useCallback(
     () => sendMessage(JSON.stringify(subData)),
@@ -132,7 +132,7 @@ function DepthChart(props) {
 
   let updateCounter = 0;
   market.open(instrument);
-  market.onupdate = function(event) {
+  market.onupdate = function (event) {
     if (event.initFlag) {
       console.log("Init render bids", event.bids.length);
       console.log("Init render asks", event.asks.length);
@@ -152,26 +152,26 @@ function DepthChart(props) {
               width: 1,
               label: {
                 text: "市价",
-                rotation: 90
-              }
-            }
+                rotation: 90,
+              },
+            },
           ],
           title: {
-            text: "价格"
-          }
+            text: "价格",
+          },
         },
         series: [
           {
             name: "Bids",
             data: bids,
-            color: "#03a7a8"
+            color: "#03a7a8",
           },
           {
             name: "Asks",
             data: asks,
-            color: "#fc5857"
-          }
-        ]
+            color: "#fc5857",
+          },
+        ],
       });
       updateCounter = 0;
     } else {
@@ -186,21 +186,21 @@ function DepthChart(props) {
       if (data.cmd === "partial") {
         market.initOrderBook(
           instrument,
-          data.asks.map(function(price_vol) {
+          data.asks.map(function (price_vol) {
             return [
               new Decimal(price_vol[0]).toNumber(),
-              new Decimal(price_vol[1]).toNumber()
+              new Decimal(price_vol[1]).toNumber(),
             ];
           }),
-          data.bids.map(function(price_vol) {
+          data.bids.map(function (price_vol) {
             return [
               new Decimal(price_vol[0]).toNumber(),
-              new Decimal(price_vol[1]).toNumber()
+              new Decimal(price_vol[1]).toNumber(),
             ];
           })
         );
       } else if (data.cmd === "update") {
-        data.asks.forEach(function(price_vol) {
+        data.asks.forEach(function (price_vol) {
           market.update(
             instrument,
             "S",
@@ -209,7 +209,7 @@ function DepthChart(props) {
           );
         });
 
-        data.bids.forEach(function(price_vol) {
+        data.bids.forEach(function (price_vol) {
           market.update(
             instrument,
             "B",

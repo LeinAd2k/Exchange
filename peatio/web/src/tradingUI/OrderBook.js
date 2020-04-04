@@ -24,12 +24,12 @@ import Spread from "./components/Spread";
 import Spinner from "./components/Spinner";
 
 // Normalize Array to have first and last methods
-Array.prototype.first = function() {
+Array.prototype.first = function () {
   return this[0];
-}; // eslint-disable-line no-extend-native
-Array.prototype.last = function() {
+};
+Array.prototype.last = function () {
   return this[this.length - 1];
-}; // eslint-disable-line no-extend-native
+};
 
 const unsafePropNames = [
   "asks",
@@ -54,7 +54,7 @@ const unsafePropNames = [
   "spreadFormat",
   "renderSize",
   "renderPrice",
-  "renderPosition"
+  "renderPosition",
 ];
 
 class OrderBook extends React.Component {
@@ -115,7 +115,7 @@ class OrderBook extends React.Component {
       spreadFormat,
       renderSize,
       renderPrice,
-      renderPosition
+      renderPosition,
     } = this.props;
     const safeProps = R.omit(unsafePropNames, this.props);
     const visibleAsks = asks.slice(0, depth).reverse();
@@ -128,20 +128,20 @@ class OrderBook extends React.Component {
         propName: "size",
         format: sizeFormat,
         getter: getSize,
-        renderer: renderSize
+        renderer: renderSize,
       },
       {
         propName: "price",
         format: priceFormat,
         getter: getPrice,
-        renderer: renderPrice
+        renderer: renderPrice,
       },
       {
         propName: "position",
         format: positionFormat,
         getter: getPosition,
-        renderer: renderPosition
-      }
+        renderer: renderPosition,
+      },
     ];
     return (
       <TradingUIParent {...safeProps}>
@@ -160,7 +160,7 @@ class OrderBook extends React.Component {
             </TradingUITableHead>
           </TradingUIStickyContent>
           <TradingUIScrollingContent
-            scrollerRef={c => {
+            scrollerRef={(c) => {
               this.scroller = ReactDOM.findDOMNode(c);
             }}
           >
@@ -170,7 +170,7 @@ class OrderBook extends React.Component {
               showSizeBar={showSizeBar}
               headerLabels={[sizeLabel, priceLabel, positionLabel]}
             >
-              {visibleAsks.map(order => (
+              {visibleAsks.map((order) => (
                 <TradingUIOrder
                   key={getPrice(order)}
                   side="sell"
@@ -199,7 +199,7 @@ class OrderBook extends React.Component {
               showSizeBar={showSizeBar}
               headerLabels={[sizeLabel, priceLabel, positionLabel]}
             >
-              {visibleBids.map(order => (
+              {visibleBids.map((order) => (
                 <TradingUIOrder
                   key={getPrice(order)}
                   side="buy"
@@ -246,7 +246,7 @@ OrderBook.propTypes = {
   renderSize: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
   renderPrice: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
   renderPosition: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
-  onClickOrder: PropTypes.func
+  onClickOrder: PropTypes.func,
 };
 
 OrderBook.defaultProps = {
@@ -271,7 +271,7 @@ OrderBook.defaultProps = {
   spreadFormat: "0.00",
   renderSize: PrettySize,
   renderPrice: PrettyPrice,
-  renderPosition: PrettyPosition
+  renderPosition: PrettyPosition,
 };
 
 export default OrderBook;

@@ -6,21 +6,23 @@ import Market from "../book/Market";
 
 import OrderBook from "../tradingUI/OrderBook";
 
-const market = new Market();
+import "./OrderBookUI.css";
+
+const market = new Market(10);
 
 function OrderBookUI(props) {
   const [socketUrl] = useState("ws://127.0.0.1:6389");
   const [sendMessage, lastMessage, readyState] = useWebSocket(socketUrl);
   const [book, setBook] = useState({
     asks: [],
-    bids: []
+    bids: [],
   });
 
   const subData = {
     cmd: "sub",
     payload: {
-      name: "bitmex_XBTUSD"
-    }
+      name: "bitmex_XBTUSD",
+    },
   };
   const handleClickSendMessage = useCallback(
     () => sendMessage(JSON.stringify(subData)),
@@ -30,18 +32,18 @@ function OrderBookUI(props) {
   const instrument = "bitmex_XBTUSD";
   let updateCounter = 0;
   market.open(instrument);
-  market.onupdate = function(event) {
+  market.onupdate = function (event) {
     if (event.initFlag) {
       console.log("Init render bids", event.bids.length);
       console.log("Init render asks", event.asks.length);
     }
-    if (event.initFlag || updateCounter > 5) {
+    if (event.initFlag || updateCounter > 10) {
       const bids = event.bids;
       const asks = event.asks;
 
       setBook({
         asks: asks,
-        bids: bids
+        bids: bids,
       });
       updateCounter = 0;
     } else {
@@ -56,21 +58,21 @@ function OrderBookUI(props) {
       if (data.cmd === "partial") {
         market.initOrderBook(
           instrument,
-          data.asks.map(function(price_vol) {
+          data.asks.map(function (price_vol) {
             return [
               new Decimal(price_vol[0]).toNumber(),
-              new Decimal(price_vol[1]).toNumber()
+              new Decimal(price_vol[1]).toNumber(),
             ];
           }),
-          data.bids.map(function(price_vol) {
+          data.bids.map(function (price_vol) {
             return [
               new Decimal(price_vol[0]).toNumber(),
-              new Decimal(price_vol[1]).toNumber()
+              new Decimal(price_vol[1]).toNumber(),
             ];
           })
         );
       } else if (data.cmd === "update") {
-        data.asks.forEach(function(price_vol) {
+        data.asks.forEach(function (price_vol) {
           market.update(
             instrument,
             "S",
@@ -79,7 +81,7 @@ function OrderBookUI(props) {
           );
         });
 
-        data.bids.forEach(function(price_vol) {
+        data.bids.forEach(function (price_vol) {
           market.update(
             instrument,
             "B",
@@ -90,16 +92,9 @@ function OrderBookUI(props) {
       }
     }
   }, [lastMessage]);
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: "Connecting",
-    [ReadyState.OPEN]: "Open",
-    [ReadyState.CLOSING]: "Closing",
-    [ReadyState.CLOSED]: "Closed"
-  }[readyState];
 
   return (
-    <div>
-      <span>The WebSocket is currently {connectionStatus}</span>
+    <div className="order_book_ui">
       <button
         onClick={handleClickSendMessage}
         disabled={readyState !== ReadyState.OPEN}
@@ -109,8 +104,10 @@ function OrderBookUI(props) {
       <OrderBook
         asks={book.asks}
         bids={book.bids}
-        getPrice={entry => entry[0]}
-        getSize={entry => entry[1]}
+        getPrice={(entry) => entry[0]}
+        getSize={(entry) => entry[1]}
+        headerText={props.title}
+        showSizeBar={true}
       />
       {/* <OrderBook asks={book.asks} bids={book.bids} /> */}
     </div>

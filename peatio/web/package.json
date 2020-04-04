@@ -13,6 +13,7 @@
     "glamorous": "^5.0.0",
     "highcharts": "^8.0.4",
     "highcharts-react-official": "^3.0.0",
+    "javascript-algorithms-and-data-structures": "0.0.4",
     "klinecharts": "^5.1.0",
     "lightweight-charts": "^2.0.0",
     "moment": "^2.24.0",
@@ -22,7 +23,8 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1",
-    "react-use-websocket": "^1.3.4"
+    "react-use-websocket": "^1.3.4",
+    "red-black-tree-js": "^1.2.2"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,6 +1,7 @@
-const isArrayOrObject = coll => Array.isArray(coll) || typeof coll === "object";
+const isArrayOrObject = (coll) =>
+  Array.isArray(coll) || typeof coll === "object";
 
-const lengthOrSize = coll => coll.length || coll.size;
+const lengthOrSize = (coll) => coll.length || coll.size;
 
 export const hasReceivedOrderBook = ({ bids, asks }) =>
   isArrayOrObject(bids) &&
@@ -11,10 +12,10 @@ export const hasReceivedOrderBook = ({ bids, asks }) =>
 export const hasReceivedTrades = ({ trades }) =>
   isArrayOrObject(trades) && lengthOrSize(trades) > 0;
 
-export const countTrailingZeroes = numString => {
+export const countTrailingZeroes = (numString) => {
   let numZeroes = 0;
   for (let digit of numString.split("").reverse()) {
-    if (digit == 0) ++numZeroes;
+    if (digit === 0) ++numZeroes;
     // eslint-disable-line eqeqeq
     else return numZeroes;
   }

@@ -4,7 +4,8 @@ import { Row, Col } from "antd";
 import "./App.css";
 
 import DepthChart from "./components/Depth.jsx";
-import KlineChart from "./components/Kline.jsx";
+// import KlineChart from "./components/Kline.jsx";
+// import OrderBookUI from "./components/OrderBookUI";
 
 function App() {
   return (
@@ -22,11 +23,20 @@ function App() {
           <DepthChart title="Binance BTCUSDT" instrument="binance_BTCUSDT" />
         </Col>
       </Row>
-      <Row>
+      {/* <Row>
+        <Col span={24}>
+          <OrderBookUI
+            title="Bitmex order book"
+            exchange="bitmex"
+            symbol="XBTUSD"
+          />
+        </Col>
+      </Row> */}
+      {/* <Row>
         <Col span={24}>
           <KlineChart exchange="bitfinex" symbol="tBTCUSD" interval="1D" />
         </Col>
-      </Row>
+      </Row> */}
       {/* <Row>
         <Col span={24}>
           <KlineChart exchange="binance" symbol="BTCUSDT" interval="1d" />
