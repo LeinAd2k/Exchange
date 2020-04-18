@@ -9,7 +9,7 @@ import Market from "../book/Market";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 
-const market = new Market(500);
+const market = new Market();
 
 function DepthChart(props) {
   const instrument = props.instrument;

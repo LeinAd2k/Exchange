@@ -1,13 +1,13 @@
 import OrderBook from "./OrderBook";
+import PriceLevel from "./PriceLevel";
 import UpdateEvent from "./UpdateEvent";
 
 class Market {
-  constructor(slice = 0) {
+  constructor() {
     this._books = new Map();
 
     this.number = Math.random();
     this.onupdate = undefined;
-    this.slice = slice;
   }
 
   open(instrument) {
@@ -25,13 +25,13 @@ class Market {
     const book = this._books.get(instrument);
     if (!book) return;
 
-    let askTree = book._asks;
-    let bidTree = book._bids;
+    let askLevels = book._asks;
+    let bidLevels = book._bids;
     asks.forEach((element) => {
-      askTree.insert(element[0], element[1]);
+      askLevels.add(new PriceLevel(element[0], element[1]));
     });
     bids.forEach((element) => {
-      bidTree.insert(element[0], element[1]);
+      bidLevels.add(new PriceLevel(element[0], element[1]));
     });
     console.log("order book inited");
     onupdate(this, book, true);
@@ -49,18 +49,18 @@ class Market {
 export default Market;
 
 function update(book, side, price, size) {
-  const tree = side === "B" ? book._bids : book._asks;
+  const levels = side === "B" ? book._bids : book._asks;
 
-  const node = tree.findNode(price);
+  const node = levels.find(new PriceLevel(price));
   if (node) {
     if (size > 0) {
-      tree.update(price, size);
+      node.value.size = size;
     } else {
-      tree.remove(price);
+      levels.delete(new PriceLevel(price));
     }
   } else {
     if (size > 0) {
-      tree.insert(price, size);
+      levels.add(new PriceLevel(price, size));
     } else {
       // console.log("delete", price, "without node");
     }
@@ -69,15 +69,5 @@ function update(book, side, price, size) {
 
 function onupdate(market, book, initFlag) {
   if (market.onupdate)
-    if (market.slice === 0) {
-      market.onupdate(new UpdateEvent(book.asks(), book.bids(), initFlag));
-    } else {
-      market.onupdate(
-        new UpdateEvent(
-          book.asks().slice(0, market.slice),
-          book.bids().slice(0, market.slice),
-          initFlag
-        )
-      );
-    }
+    market.onupdate(new UpdateEvent(book.asks(), book.bids(), initFlag));
 }

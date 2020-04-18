@@ -170,13 +170,13 @@ EM.run do
       when 'drop'
         $db_manager.drop(db_name)
       when 'update'
-        $db_manager.find(db_name).update(data['payload'])
+        $db_manager.find(db_name)&.update(data['payload'])
       when 'get'
-        $db_manager.find(db_name).fetch(data['payload']['side'], data['payload']['limit'])
+        $db_manager.find(db_name)&.fetch(data['payload']['side'], data['payload']['limit'])
       when 'sub'
-        $db_manager.find(db_name).sub(ws)
+        $db_manager.find(db_name)&.sub(ws)
       when 'unsub'
-        $db_manager.find(db_name).unsub(ws)
+        $db_manager.find(db_name)&.unsub(ws)
       else
         raise "Unsupport cmd #{data['cmd']}"
       end

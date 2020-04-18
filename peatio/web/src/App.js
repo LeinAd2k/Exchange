@@ -5,7 +5,7 @@ import "./App.css";
 
 import DepthChart from "./components/Depth.jsx";
 // import KlineChart from "./components/Kline.jsx";
-// import OrderBookUI from "./components/OrderBookUI";
+import OrderBookUI from "./components/OrderBookUI";
 
 function App() {
   return (
@@ -24,7 +24,21 @@ function App() {
         </Col>
       </Row>
       {/* <Row>
-        <Col span={24}>
+        <Col span={8}>
+          <OrderBookUI
+            title="Bitmex order book"
+            exchange="bitmex"
+            symbol="XBTUSD"
+          />
+        </Col>
+        <Col span={8}>
+          <OrderBookUI
+            title="Bitmex order book"
+            exchange="bitmex"
+            symbol="XBTUSD"
+          />
+        </Col>
+        <Col span={8}>
           <OrderBookUI
             title="Bitmex order book"
             exchange="bitmex"

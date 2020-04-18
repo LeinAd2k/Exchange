@@ -1,25 +1,39 @@
-import RbTree from "red-black-tree-js";
+import SortedSet from "collections/sorted-set";
 
 class OrderBook {
   constructor(instrument) {
     this.instrument = instrument;
 
-    this._asks = new RbTree();
-    this._bids = new RbTree();
+    const equal = (a, b) => a.price === b.price;
+
+    this._bids = new SortedSet([], equal, (a, b) => b.price - a.price);
+    this._asks = new SortedSet([], equal, (a, b) => a.price - b.price);
+  }
+
+  bestBid() {
+    const node = this._bids.findLeast();
+
+    return node ? node.value : undefined;
+  }
+
+  bestAsk() {
+    const node = this._asks.findLeast();
+
+    return node ? node.value : undefined;
   }
 
   bids() {
     return this._bids
-      .toSortedArray()
+      .slice(0, 1000)
+      .reverse()
       .map(function (pl) {
-        return [pl.key, pl.value];
-      })
-      .reverse();
+        return [pl.price, pl.size];
+      });
   }
 
   asks() {
-    return this._asks.toSortedArray().map(function (pl) {
-      return [pl.key, pl.value];
+    return this._asks.slice(0, 1000).map(function (pl) {
+      return [pl.price, pl.size];
     });
   }
 }
