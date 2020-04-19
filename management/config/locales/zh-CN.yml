@@ -1,7 +1,0 @@
-zh-CN:
-  hello: "Hello world"
-
-  activerecord:
-    errors:
-      messages:
-        record_invalid: 记录有误

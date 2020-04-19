@@ -51,8 +51,6 @@ module Management
       g.helper          false
     end
 
-    config.i18n.available_locales = %i[zh-CN zh]
-    config.i18n.default_locale = :'zh-CN'
 
     # FIXME
     config.active_record.default_timezone = :local
