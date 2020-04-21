@@ -2,4 +2,5 @@ matplotlib==3.2.1
 websocket_client==0.57.0
 bintrees==2.0.7
 numpy==1.18.3
+sortedcontainers==2.1.0
 celery[redis]==4.4.2

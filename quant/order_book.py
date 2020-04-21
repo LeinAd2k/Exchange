@@ -8,11 +8,13 @@ import time
 import json
 import random
 
-# import numpy as np
+import numpy as np
 import matplotlib.pyplot as plt
 
 from bintrees import RBTree
 from decimal import *
+
+from sortedcontainers import SortedDict
 
 getcontext().prec = 32
 
@@ -26,6 +28,31 @@ def draw(*args):
     plt.figure()
     plt.plot(ask_x, ask_y)
     plt.savefig("ob.png")
+
+
+def top(*args):
+    print('********************************************')
+    ask_x = list(ask_tree.keys())
+    ask_y = list(ask_tree.values())
+    sort_index = sorted(range(len(ask_y)), key=ask_y.__getitem__, reverse=True)
+
+    sd = SortedDict()
+    for i in sort_index[0:15]:
+        sd[ask_x[i]] = ask_y[i]
+    for k, v in reversed(sd.items()):
+        print(k, v)
+    print('--------------------')
+    bid_x = list(bid_tree.keys())
+    bid_y = list(bid_tree.values())
+    sort_index = sorted(range(len(bid_y)), key=bid_y.__getitem__, reverse=True)
+
+    sd = SortedDict()
+    for i in sort_index[0:25]:
+        sd[bid_x[i]] = bid_y[i]
+    for k, v in reversed(sd.items()):
+        print(k, v)
+    print('********************************************')
+    print("\r\n")
 
 
 def on_message(ws, message):
@@ -55,20 +82,8 @@ def on_message(ws, message):
                     ask_tree.update([(price, Decimal(pri_vol[1]))])
             else:
                 ask_tree.insert(price, Decimal(pri_vol[1]))
-    # print(list(bid_tree.items()))
-    # print(list(ask_tree.items()))
-    # ask_max_item = ask_tree.max_item()
-    # bid_max_item = bid_tree.max_item()
-    # ask_min_item = ask_tree.min_item()
-    # bid_min_item = bid_tree.min_item()
 
-    # ask_x_max = ask_max_item[0]
-    # ask_y_max = ask_max_item[1]
-    # ask_x_min = ask_min_item[0]
-    # ask_y_min = ask_min_item[1]
-
-    # counter = random.randint(1, 10)
-    draw()
+    top()
 
 
 def on_error(ws, error):
