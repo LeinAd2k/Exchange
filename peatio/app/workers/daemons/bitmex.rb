@@ -40,13 +40,14 @@ module Daemons
           p response['info']
           to_data = {
             op: 'subscribe',
-            args: ['orderBookL2:XBTUSD', 'trade:XBTUSD']
+            args: ['orderBookL2:XBTUSD', 'trade:XBTUSD', 'funding:XBTUSD', 'instrument:XBTUSD', 'liquidation:XBTUSD']
           }
           ws.send(to_data.to_json)
         elsif response['success']
           p "#{response['subscribe']} subscribed"
         else
-          if response['table'] == 'orderBookL2'
+          case response['table']
+          when 'orderBookL2'
             case response['action']
             when 'partial'
               asks_data = []
@@ -108,7 +109,7 @@ module Daemons
             else
               logger.error "Unsupport action #{response['action']}"
             end
-          elsif response['table'] == 'trade'
+          when 'trade'
             case response['action']
             when 'partial'
               trades = response['data'].map do |ob|
@@ -133,6 +134,60 @@ module Daemons
             else
               puts "Unknown action #{response['action']}"
             end
+          when 'announcement'
+            ap response['data']
+          when 'chat'
+            ap response['data']
+          when 'connected'
+            if response['data'].size.positive?
+              puts "Users #{response['data'][0]['users']}, Bots #{response['data'][0]['bots']}"
+            end
+          when 'funding'
+            response['data'].each do |f|
+              puts "#{f['symbol']} #{f['timestamp']}, rate: #{f['fundingRate']}, rate daily: #{f['fundingRateDaily']}"
+            end
+          when 'instrument'
+            case response['action']
+            when 'partial'
+              response['data'].each do |f|
+                puts "#{f['symbol']} 24h vol: #{f['volume24h']}, last price: #{f['lastPriceProtected']}"
+              end
+            when 'update'
+              response['data'].each do |f|
+                f.keys.each do |k|
+                  next if k == 'symbol'
+
+                  puts "#{f['symbol']} #{k}: #{f[k]}"
+                end
+              end
+            end
+          when 'insurance'
+            response['data'].each do |f|
+              puts "#{f['currency']} #{f['timestamp']} walletBalance: #{f['walletBalance']}"
+            end
+          when 'liquidation'
+            case response['action']
+            when 'partial'
+              response['data'].each do |f|
+                puts "#{f['symbol']}: orderID: #{f['orderID']}, side: #{f['side']}, price: #{f['price']}, leavesQty: #{f['leavesQty']}"
+              end
+            when 'insert'
+              response['data'].each do |f|
+                puts "#{f['symbol']}: orderID: #{f['orderID']}, side: #{f['side']}, price: #{f['price']}, leavesQty: #{f['leavesQty']}"
+              end
+            when 'delete'
+              response['data'].each do |f|
+                puts "#{f['symbol']}: orderID: #{f['orderID']} deleted"
+              end
+            end
+          when 'quote'
+            ap response['data'].last if response['data'].size.positive?
+          when 'settlement'
+            response['data'].each do |f|
+              puts "#{f['symbol']} #{f['timestamp']}, settlementType: #{f['settlementType']}, settledPrice: #{f['settledPrice']}"
+            end
+          else
+            puts "Unknown table #{response['table']}"
           end
         end
       end
