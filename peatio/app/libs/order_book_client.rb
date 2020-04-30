@@ -39,6 +39,17 @@ class OrderBookClient
     @conn.send(send_data.to_json)
   end
 
+  def update_trades(name, trades = [])
+    send_data = {
+      cmd: 'update_trades',
+      payload: {
+        name: name,
+        trades: trades
+      }
+    }
+    @conn.send(send_data.to_json)
+  end
+
   def fetch(name, side = nil, limit = nil)
     send_data = {
       cmd: 'get',

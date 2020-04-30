@@ -40,72 +40,99 @@ module Daemons
           p response['info']
           to_data = {
             op: 'subscribe',
-            args: ['orderBookL2:XBTUSD']
+            args: ['orderBookL2:XBTUSD', 'trade:XBTUSD']
           }
           ws.send(to_data.to_json)
         elsif response['success']
           p "#{response['subscribe']} subscribed"
         else
-          case response['action']
-          when 'partial'
-            asks_data = []
-            bids_data = []
-            response['data'].each do |ob|
-              @price_ids[ob['id']] = ob['price']
-              price = ob['price'].to_d
-              amount = ob['size'].to_d
-              case ob['side']
-              when 'Sell'
-                asks_data << [price, amount]
-              when 'Buy'
-                bids_data << [price, amount]
+          if response['table'] == 'orderBookL2'
+            case response['action']
+            when 'partial'
+              asks_data = []
+              bids_data = []
+              response['data'].each do |ob|
+                @price_ids[ob['id']] = ob['price']
+                price = ob['price'].to_d
+                amount = ob['size'].to_d
+                case ob['side']
+                when 'Sell'
+                  asks_data << [price, amount]
+                when 'Buy'
+                  bids_data << [price, amount]
+                end
               end
-            end
-            order_book_db.update(symbol_name, bids_data, asks_data)
-          when 'insert'
-            asks_data = []
-            bids_data = []
-            response['data'].each do |ob|
-              @price_ids[ob['id']] = ob['price']
-              price = ob['price'].to_d
-              amount = ob['size'].to_d
-              case ob['side']
-              when 'Sell'
-                asks_data << [price, amount]
-              when 'Buy'
-                bids_data << [price, amount]
+              order_book_db.update(symbol_name, bids_data, asks_data)
+            when 'insert'
+              asks_data = []
+              bids_data = []
+              response['data'].each do |ob|
+                @price_ids[ob['id']] = ob['price']
+                price = ob['price'].to_d
+                amount = ob['size'].to_d
+                case ob['side']
+                when 'Sell'
+                  asks_data << [price, amount]
+                when 'Buy'
+                  bids_data << [price, amount]
+                end
               end
-            end
-            order_book_db.update(symbol_name, bids_data, asks_data)
-          when 'update'
-            asks_data = []
-            bids_data = []
-            response['data'].each do |ob|
-              price = @price_ids[ob['id']].to_d
-              amount = ob['size'].to_d
-              case ob['side']
-              when 'Sell'
-                asks_data << [price, amount]
-              when 'Buy'
-                bids_data << [price, amount]
+              order_book_db.update(symbol_name, bids_data, asks_data)
+            when 'update'
+              asks_data = []
+              bids_data = []
+              response['data'].each do |ob|
+                price = @price_ids[ob['id']].to_d
+                amount = ob['size'].to_d
+                case ob['side']
+                when 'Sell'
+                  asks_data << [price, amount]
+                when 'Buy'
+                  bids_data << [price, amount]
+                end
               end
-            end
-            order_book_db.update(symbol_name, bids_data, asks_data)
-          when 'delete'
-            asks_data = []
-            bids_data = []
-            response['data'].each do |ob|
-              price = @price_ids[ob['id']].to_d
-              case ob['side']
-              when 'Sell'
-                asks_data << [price, ZERO_D]
-              when 'Buy'
-                bids_data << [price, ZERO_D]
+              order_book_db.update(symbol_name, bids_data, asks_data)
+            when 'delete'
+              asks_data = []
+              bids_data = []
+              response['data'].each do |ob|
+                price = @price_ids[ob['id']].to_d
+                case ob['side']
+                when 'Sell'
+                  asks_data << [price, ZERO_D]
+                when 'Buy'
+                  bids_data << [price, ZERO_D]
+                end
               end
+              order_book_db.update(symbol_name, bids_data, asks_data)
+            else
+              logger.error "Unsupport action #{response['action']}"
             end
-            order_book_db.update(symbol_name, bids_data, asks_data)
-          else
-            logger.error "Unsupport action #{response['action']}"
+          elsif response['table'] == 'trade'
+            case response['action']
+            when 'partial'
+              trades = response['data'].map do |ob|
+                {
+                  timestamp: DateTime.parse(ob['timestamp']).to_i,
+                  side: ob['side'],
+                  size: ob['size'],
+                  price: ob['price']
+                }
+              end
+              order_book_db.update_trades(symbol_name, trades)
+            when 'insert'
+              trades = response['data'].each do |ob|
+                {
+                  timestamp: DateTime.parse(ob['timestamp']).to_i,
+                  side: ob['side'],
+                  size: ob['size'],
+                  price: ob['price']
+                }
+              end
+              order_book_db.update_trades(symbol_name, trades)
+            else
+              puts "Unknown action #{response['action']}"
+            end
           end
         end
       end

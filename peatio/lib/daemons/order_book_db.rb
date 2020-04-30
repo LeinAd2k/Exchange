@@ -67,13 +67,14 @@ class OrderBookDBManager
 end
 
 class OrderBookDB
-  attr_accessor :name, :bids, :asks, :pubsub
+  attr_accessor :name, :bids, :asks, :pubsub, :trades
 
   def initialize(name)
     @name = name
     @bids = RBTree.new
     @asks = RBTree.new
     @pubsub = {}
+    @trades = []
   end
 
   def fetch(side = nil, limit = nil)
@@ -94,6 +95,17 @@ class OrderBookDB
       res[:bids] = res[:bids][0, limit] if res[:bids].present?
     end
     res
+  end
+
+  def update_trades(payload)
+    payload['trades'].each do |ob|
+      @trades << ob
+    end
+
+    # payload['cmd'] = 'update_trades'
+    # @pubsub.each do |conn, _ready|
+    #   conn.send(payload.to_json)
+    # end
   end
 
   def update(payload)
@@ -144,6 +156,8 @@ class OrderBookDB
       puts title if amount >= 500
     when 'bitmex_XBTUSD'
       puts title if amount >= 5_000_000
+    when 'bitfinex_XBTUSD'
+      puts title if amount >= 500
     end
   end
 end
@@ -177,6 +191,8 @@ EM.run do
         $db_manager.find(db_name)&.sub(ws)
       when 'unsub'
         $db_manager.find(db_name)&.unsub(ws)
+      when 'update_trades'
+        $db_manager.find(db_name)&.update_trades(data['payload'])
       else
         raise "Unsupport cmd #{data['cmd']}"
       end
