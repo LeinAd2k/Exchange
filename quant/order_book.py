@@ -99,7 +99,7 @@ def on_open(ws):
         sub_data = {
             "cmd": "sub",
             "payload": {
-                "name": "bitmex_XBTUSD"
+                "name": "bitfinex_XBTUSD"  # bitmex_XBTUSD
             }
         }
         ws.send(json.dumps(sub_data))
