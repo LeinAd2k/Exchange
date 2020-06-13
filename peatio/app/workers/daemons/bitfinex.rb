@@ -95,7 +95,7 @@ module Daemons
                 order_book_db.update(symbol_name, bids_data, asks_data)
               else
                 if response.size == 2 && response[1] == 'hb'
-                  # TODO
+                  # heartbeating
                 else
                   ap response
                 end
