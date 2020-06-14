@@ -36,12 +36,12 @@ module Daemons
         }
         ws.send(sub_data.to_json)
 
-        # sub_data = {
-        #   event: 'subscribe',
-        #   channel: 'trades',
-        #   symbol: 'tBTCUSD'
-        # }
-        # ws.send(sub_data.to_json)
+        sub_data = {
+          event: 'subscribe',
+          channel: 'trades',
+          symbol: 'tBTCUSD'
+        }
+        ws.send(sub_data.to_json)
       end
 
       ws.on :message do |event|
@@ -110,16 +110,17 @@ module Daemons
               if response[2].is_a?(Array)
                 case response[1]
                 when 'te' # realtime
-                  trades = response[2].map do |t|
-                    {
-                      timestamp: t[1], # millisecond time stamp
-                      side: cal_side(t[2]),
-                      size: t[2].abs,
-                      price: t[3]
-                    }
-                  end
+                  t = response[2]
+                  trades = [{
+                    timestamp: t[1], # millisecond time stamp
+                    side: cal_side(t[2]),
+                    size: t[2].abs,
+                    price: t[3]
+                  }]
                   order_book_db.update_trades(symbol_name, trades)
                 when 'tu'
+                when 'hb'
+                  # heartbeating
                 end
               end
             end
